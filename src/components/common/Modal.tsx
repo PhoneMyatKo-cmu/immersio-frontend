@@ -103,19 +103,19 @@ export function Modal({
                     {message}
                 </p>
                 
-                <div className="flex justify-end gap-2">
-                    <button
-                        onClick={handleConfirm}
-                        className="rounded-md bg-teal-600 px-5 py-2 text-sm font-medium text-white transition-all hover:bg-teal-700"
-                    >
-                        {confirmText}
-                    </button>
-                    
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 ">
                     <button
                         onClick={handleCancel}
                         className="rounded-md bg-teal-600 px-5 py-2 text-sm font-medium text-white transition-all hover:bg-teal-700"
                     >
                         Cancel
+                    </button>
+
+                    <button
+                        onClick={handleConfirm}
+                        className="rounded-md bg-teal-600 px-5 py-2 text-sm font-medium text-white transition-all hover:bg-teal-700"
+                    >
+                        {confirmText}
                     </button>
                 </div>
             </div>

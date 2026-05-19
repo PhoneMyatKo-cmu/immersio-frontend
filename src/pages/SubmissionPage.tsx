@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { youtubeUrlSubmissionApi } from "../api/youtubeUrlSubmission";
 import { Modal } from "../components/common/Modal";
 import Spinner from "../components/common/Spinner";
@@ -66,26 +67,59 @@ function SubmissionPage() {
     }
 
     return <>
-        <div className="p-5 w-[50%] mx-auto mt-[20%] text-white bg-greygreen">
-            <div className="text-2xl">Submit your favorite Japanese Youtube video url here..</div>
+        
+
+        <div className="w-[92%] max-w-2xl mx-auto mt-16 sm:mt-24 md:mt-32 p-4 sm:p-6 md:p-8 text-white bg-greygreen rounded-lg">
+            
+
+            <Link
+                to="/"
+                className="inline-flex items-center text-sm text-white/70 hover:text-white transition-colors mb-4"
+            >
+                ← Back to Home
+            </Link>
+
+            <div className="mb-4 sm:mb-6">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold leading-tight">
+                    Submit a Japanese YouTube Video
+                </h1>
+                <p className="mt-2 text-sm sm:text-base text-white/70 leading-relaxed">
+                    Share a public YouTube link with Japanese captions so we can process it for playback.
+                </p>
+            </div>
             <form onSubmit={handleSubmit}>
 
                 <input type="text"
                     name="youtube_url"
                     placeholder="Enter valid youtube url link..."
                     value={formData.youtube_url} onChange={handleChange}
-                    className="block  my-5 p-3 text-white bg-darkgrey   w-full "
+                    className="block my-4 sm:my-5 p-3 text-sm sm:text-base text-white bg-darkgrey w-full rounded-md "
                     required
                 />
-                <button type="submit" className="hover:cursor-pointer w-full bg-button text-white p-2 rounded-2xl ">Submit</button>
+                <button type="submit" className="hover:cursor-pointer w-full bg-button text-white py-2.5 sm:py-3 px-4 rounded-xl text-sm sm:text-base ">Submit</button>
 
             </form>
-            {loading && <div className="fixed inset-0 flex items-center justify-center bg-black/30 z-50">
+            {loading && <div className="fixed inset-0 flex items-center justify-center bg-black/30 z-50 p-4">
 
                 <Spinner />
             </div>
              }
            
+ <div className="mt-3 p-3 bg-darkgrey rounded-md border border-white/10">
+    <p className="text-s font-medium text-white/50 mb-2">Video requirements</p>
+    <ul className="space-y-1.5">
+      {[
+        { icon: "🎬", text: "YouTube videos only" },
+        { icon: "🇯🇵", text: "Must have Japanese captions" },
+        { icon: "🔓", text: "Must be publicly accessible" },
+      ].map(({ icon, text }) => (
+        <li key={text} className="flex items-start text-xs text-white/60">
+          <span className="inline-flex w-5 justify-center mr-1 shrink-0 leading-none">{icon}</span>
+          <span>{text}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
         </div>
     <Modal
                 isOpen={modalState.isOpen}
