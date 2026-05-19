@@ -14,10 +14,12 @@ function SubmissionPage() {
         message: string;
         variant: 'info' | 'success' | 'warning' | 'error';
         title?: string;
+        confirmText?: string;
     }>({
         isOpen: false,
         message: '',
         variant: 'info',
+        
     });
     
     function handleChange(e) {
@@ -36,9 +38,10 @@ function SubmissionPage() {
                 console.log(response.data)
                setModalState({
                     isOpen: true,
-                    title: 'Success',
+                    title:  response.data.message.startsWith("Successful")? "Success" : "Duplicate",
                     message: response.data.message,
-                    variant: 'success',
+                   variant: response.data.message.startsWith("Successful") ? "success" : "info",
+                    confirmText:"Proceed to playback interface.",
                 });
              }
         ).catch(error => {
@@ -50,6 +53,7 @@ function SubmissionPage() {
                 title: status === 503 ? 'Service Temporarily Unavailable' : 'Error',
                 message: apiMessage,
                 variant: status === 503 ? 'warning' : 'error',
+                confirmText:"Try again.",
             });
         }
                 
@@ -88,7 +92,8 @@ function SubmissionPage() {
                 onClose={() => setModalState({ ...modalState, isOpen: false })}
                 title={modalState.title}
                 message={modalState.message}
-                variant={modalState.variant}
+            variant={modalState.variant}
+            confirmText={modalState.confirmText}
             />
     </>
 }

@@ -66,6 +66,10 @@ export function Modal({
         if (onConfirm) onConfirm();
         onClose();
     };
+
+    const handleCancel = () => {
+        onClose();
+    }
     
     return (
         <div
@@ -105,6 +109,13 @@ export function Modal({
                         className="rounded-md bg-teal-600 px-5 py-2 text-sm font-medium text-white transition-all hover:bg-teal-700"
                     >
                         {confirmText}
+                    </button>
+                    
+                    <button
+                        onClick={handleCancel}
+                        className="rounded-md bg-teal-600 px-5 py-2 text-sm font-medium text-white transition-all hover:bg-teal-700"
+                    >
+                        Cancel
                     </button>
                 </div>
             </div>
