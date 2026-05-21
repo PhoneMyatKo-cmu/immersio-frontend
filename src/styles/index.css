@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+@theme {
+  --color-greygreen: #1d283a;
+  --color-darkgrey: #0e1629;
+  --color-button: #13b7a5;
+}
+
+body {
+  background-color: #0e1629;
+}
