@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
+import { captionApi } from "../api/caption"
 import { getVideoMetaDataApi } from "../api/youtubeUrlSubmission"
+import type { Caption } from "../components/videoPlayer/CaptionBar"
+import CaptionBar from "../components/videoPlayer/CaptionBar"
 import VideoPlayer from "../components/videoPlayer/VideoPlayer"
 import { useMediaQuery } from "../hooks/useMediaQuery"
 
@@ -17,11 +20,11 @@ function VideoPlaybackPage() {
     
     const { videoId } = useParams()
     const [currentTime, setCurrentTime] = useState(0)
-    const [ isLookupOpen, setLookupOpen ] = useState(false)
     const [ selectedToken, setSelectedToken ] = useState(null)
     const  isMobile =useMediaQuery("(max-width: 768px)")
     const [videoMetaData, setVideoMetaData] = useState<VideoMetadata | null>(null)
-    const[isLoading,setIsLoading]=useState<boolean>(true)
+    const [isLoading, setIsLoading] = useState<boolean>(true)
+    const [captions,setCaptions]=useState<Caption[]>([])
 
     useEffect(() => {
         if (!videoId) {
@@ -39,6 +42,12 @@ function VideoPlaybackPage() {
             console.log("Done")
             setIsLoading(false)
         })
+
+        captionApi.get(videoId).then(response => {
+            console.log(response.data)
+            setCaptions(response.data)
+        }
+        )
 
     }, [videoId])
     
@@ -62,7 +71,16 @@ function VideoPlaybackPage() {
                         />
                     </div>
                     <div>
-                        {/* {CaptionBar} */}
+                        <CaptionBar
+    captions={captions}
+    currentTime={currentTime}
+    // onWordClick={(token, timestamp) => {
+    //     setSelectedToken(token)
+    //     setClickTimestamp(timestamp)
+    //     setIsLookupOpen(true)
+                            // }}
+    onWordClick={()=>{return}}
+/>
                     </div>
 
                 </div>
