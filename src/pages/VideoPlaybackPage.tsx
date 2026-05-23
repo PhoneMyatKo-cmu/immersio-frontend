@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { captionApi } from "../api/caption"
+import { vocabApi } from "../api/vocab_context"
 import { getVideoMetaDataApi } from "../api/youtubeUrlSubmission"
 import type { Caption } from "../components/videoPlayer/CaptionBar"
 import CaptionBar from "../components/videoPlayer/CaptionBar"
+import LookupPanel, { type LookupResult } from "../components/videoPlayer/LookUpPanel"
 import VideoPlayer from "../components/videoPlayer/VideoPlayer"
 import { useMediaQuery } from "../hooks/useMediaQuery"
 
@@ -24,8 +26,23 @@ function VideoPlaybackPage() {
     const  isMobile =useMediaQuery("(max-width: 768px)")
     const [videoMetaData, setVideoMetaData] = useState<VideoMetadata | null>(null)
     const [isLoading, setIsLoading] = useState<boolean>(true)
-    const [captions,setCaptions]=useState<Caption[]>([])
-
+    const [captions, setCaptions] = useState<Caption[]>([])
+    const [clickedTimestamp, setClickTimestamp] = useState<number>(0)
+    const [lookupResult,  setLookupResult]  = useState<LookupResult | null>(null)
+    const [isLookupLoading, setIsLookupLoading] = useState(false)
+    const [isSaved,       setIsSaved]       = useState(false)
+    const [isLookupOpen, setIsLookupOpen] = useState(false)
+    
+async function handleSave() {
+    if (!lookupResult || isSaved) return
+    // await api.post("/vocabulary/save", {
+    //     vocab_id:    lookupResult.vocab_id,
+    //     sentence_id: lookupResult.sentence_id,
+    //     video_id:    videoId,
+    // })
+    setIsSaved(true)
+}
+    
     useEffect(() => {
         if (!videoId) {
             alert("No video Id.")
@@ -50,6 +67,24 @@ function VideoPlaybackPage() {
         )
 
     }, [videoId])
+
+    useEffect(() => {
+        if (!selectedToken || clickedTimestamp==null || !videoId) { return }
+        
+        setIsLookupLoading(true)
+        setIsLookupOpen(true)
+        setIsSaved(false)
+
+        vocabApi.getVocabAndContextSentence(selectedToken, videoId, clickedTimestamp)
+            .then(response => {
+                console.log(response.data)
+                setLookupResult(response.data)
+            }).catch(e => console.log(e))
+            .finally(() => {
+            setIsLookupLoading(false)
+        })
+
+    },[selectedToken,clickedTimestamp,videoId])
     
     if (isLoading) {
         return <>
@@ -77,22 +112,32 @@ function VideoPlaybackPage() {
     // onWordClick={(token, timestamp) => {
     //     setSelectedToken(token)
     //     setClickTimestamp(timestamp)
-    //     setIsLookupOpen(true)
                             // }}
-    onWordClick={()=>{return}}
+                            
+    onWordClick={(token, timestamp) => {
+        setSelectedToken(token)    
+        setClickTimestamp(timestamp)
+    }}
 />
                     </div>
 
                 </div>
 
-                <div className="right w-full md:basis-[30%] md:max-w-[30%]">
+                <div className="right w-full md:basis-[30%] md:max-w-[30%] p-10">
                     {!isMobile  && (
                         <div className="w-80 xl:w-96 border-l border-white/10 overflow-y-auto">
                             {/* <LookupPanel
                                 token={selectedToken}
                                 onClose={() => setIsLookupOpen(false)}
                             /> */}
-                            Something
+                            <LookupPanel
+                                result={lookupResult}
+                                isLoading={isLookupLoading}
+                                isSaved={isSaved}
+                                onSave={handleSave}
+                                onExplain={() => { /* implement next */ }}
+                                onClose={() => setIsLookupOpen(false)}
+                            />
                         </div>
                     )}
                 </div>
