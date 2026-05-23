@@ -123,14 +123,15 @@ async function handleSave() {
 
                 </div>
 
-                <div className="right w-full md:basis-[30%] md:max-w-[30%] p-10">
+                <div className="right w-full md:basis-[30%] md:max-w-[30%]  min-h-0 flex flex-col ">
                     {!isMobile  && (
-                        <div className="w-80 xl:w-96 border-l border-white/10 overflow-y-auto">
+                        <div className=" flex-1 border-l min-h-0 border-white/10 overflow-y-auto  scrollbar-thin scrollbar-thumb-teal-500 scrollbar-track-black">
                             {/* <LookupPanel
                                 token={selectedToken}
                                 onClose={() => setIsLookupOpen(false)}
                             /> */}
-                            <LookupPanel
+                            <div className="p-6">
+<LookupPanel
                                 result={lookupResult}
                                 isLoading={isLookupLoading}
                                 isSaved={isSaved}
@@ -138,6 +139,8 @@ async function handleSave() {
                                 onExplain={() => { /* implement next */ }}
                                 onClose={() => setIsLookupOpen(false)}
                             />
+                            </div>
+                            
                         </div>
                     )}
                 </div>
@@ -157,6 +160,7 @@ async function handleSave() {
                 }
  
             </div>
+
    
         </>
     }

@@ -285,7 +285,7 @@ export default function LookupPanel({
                                 >
                                     {showAllMeanings
                                         ? "Show less"
-                                        : `+${allMeanings.length - 3} more meanings`
+                                        : `Show complete meanings`
                                     }
                                 </button>
                             )}
@@ -350,14 +350,21 @@ export default function LookupPanel({
 function highlightWord(sentence: string, word: string): React.ReactNode {
     if (!word || !sentence) return sentence
 
-    const idx = sentence.indexOf(word)
-    if (idx === -1) return sentence
+    const parts = sentence.split(word)
+
+    // Word not found — return unchanged
+    if (parts.length === 1) return sentence
 
     return (
         <>
-            {sentence.slice(0, idx)}
-            <span className="text-teal-500 font-medium">{word}</span>
-            {sentence.slice(idx + word.length)}
+            {parts.map((part, i) => (
+                <span key={i}>
+                    {part}
+                    {i < parts.length - 1 && (
+                        <span className="text-teal-500 font-medium">{word}</span>
+                    )}
+                </span>
+            ))}
         </>
     )
 }
