@@ -13,6 +13,7 @@ interface ModalProps {
     confirmText?: string;
     onConfirm?: () => void;
     closeOnBackdrop?: boolean;
+    cancelRequired?: boolean;
 }
 
 const variantStyles: Record<ModalVariant, string> = {
@@ -31,6 +32,7 @@ export function Modal({
     confirmText = 'OK',
     onConfirm,
     closeOnBackdrop = true,
+    cancelRequired=false
 }: ModalProps) {
     // Close on Escape key
     useEffect(() => {
@@ -104,6 +106,7 @@ export function Modal({
                 </p>
                 
                 <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 ">
+                    {cancelRequired && 
                     <button
                         onClick={handleCancel}
                         className="rounded-md bg-teal-600 px-5 py-2 text-sm font-medium text-white transition-all hover:bg-teal-700"
@@ -111,6 +114,9 @@ export function Modal({
                         Cancel
                     </button>
 
+
+                    }
+                    
                     <button
                         onClick={handleConfirm}
                         className="rounded-md bg-teal-600 px-5 py-2 text-sm font-medium text-white transition-all hover:bg-teal-700"
