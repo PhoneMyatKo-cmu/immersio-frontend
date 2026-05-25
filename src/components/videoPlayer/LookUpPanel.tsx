@@ -1,4 +1,5 @@
 import { useState } from "react"
+import PronunciationButton from "../common/PronunciationButton"
 import ContextualExplanation from "./ContextualExplanation"
 
 // interface Token {
@@ -148,13 +149,6 @@ export default function LookupPanel({
                 <span className="text-lg text-white/50 font-medium tracking-wide">
                     Word Lookup
                 </span>
-                {/* <button
-                    onClick={onClose}
-                    className="w-6 h-6 flex items-center justify-center rounded text-white/30 hover:text-white hover:bg-white/8 transition-colors"
-                    aria-label="Close lookup panel"
-                >
-                    ✕
-                </button> */}
             </div>
 
             {/* ── Content ── */}
@@ -174,6 +168,11 @@ export default function LookupPanel({
                                 <h2 className="text-3xl font-japanese font-medium text-white leading-none mb-1.5">
                                     {result.surface_form}
                                 </h2>
+
+                                 <PronunciationButton
+                                    text={result.surface_form}
+                                    label={`Pronounce ${result.surface_form}`}
+                                 />
 
                                 {/* Reading + base form */}
                                 <div className="flex items-center gap-2 flex-wrap">
