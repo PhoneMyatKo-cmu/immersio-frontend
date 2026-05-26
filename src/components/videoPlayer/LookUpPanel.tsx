@@ -30,7 +30,8 @@ export interface LookupResult {
     pronunciation:         string
     jlpt_tier:       string | null
     meanings:          Sense[]
-    context_sentence:   ContextSentence
+    context_sentence: ContextSentence
+    sentence_translation:string
 }
 
 interface LookupPanelProps {
@@ -139,7 +140,7 @@ export default function LookupPanel({
     // Primary POS from first sense
     const primaryPos = result?.meanings[0]?.pos ?? null
     console.log(primaryPos)
-    const tempTranslation="Translation will come soon...!"
+    const tempTranslation=result?.sentence_translation
 
     return (
         <div className="flex flex-col h-full bg-greygreen">

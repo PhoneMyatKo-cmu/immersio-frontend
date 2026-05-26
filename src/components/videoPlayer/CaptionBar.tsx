@@ -24,13 +24,13 @@ interface CaptionBarProps {
 }
 
 // JLPT tier colours for subtle word highlighting
-const TIER_COLORS: Record<string, string> = {
-    N5: "text-green-400",
-    N4: "text-blue-400",
-    N3: "text-yellow-400",
-    N2: "text-orange-400",
-    N1: "text-red-400",
-}
+// const TIER_COLORS: Record<string, string> = {
+//     N5: "text-green-400",
+//     N4: "text-blue-400",
+//     N3: "text-yellow-400",
+//     N2: "text-orange-400",
+//     N1: "text-red-400",
+// }
 
 function getCurrentIndex(captions: Caption[], currentTime: number): number {
     for (let i = 0; i < captions.length; i++) {
@@ -51,6 +51,7 @@ function CaptionLine({
     caption,
     position,   // -2, -1, 0, 1, 2 relative to current
     onWordClick,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     currentTime,
 }: {
     caption:     Caption
@@ -60,7 +61,7 @@ function CaptionLine({
 }) {
     const isCurrent  = position === 0
     const isAdjacent = Math.abs(position) === 1
-    const isDistant  = Math.abs(position) === 2
+    // const isDistant  = Math.abs(position) === 2
 
     const opacity = isCurrent
         ? "opacity-100"

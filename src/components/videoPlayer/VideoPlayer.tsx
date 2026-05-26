@@ -127,7 +127,9 @@ export default function VideoPlayer({
                 const t = playerRef.current?.getCurrentTime() ?? 0
                 setCurrentTime(t)
                 onTimeUpdate?.(t)
-            } catch {}
+            } catch {
+                console.log("Problem accessing current time!")
+            }
         }, 100)
     }, [onTimeUpdate])
 
@@ -149,6 +151,7 @@ export default function VideoPlayer({
 
     const togglePlay = useCallback(() => {
         if (!playerRef.current) return
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo()
     }, [isPlaying])
 
@@ -283,7 +286,7 @@ export default function VideoPlayer({
 
             {/* Transparent overlays — block YouTube title/logo clicks */}
             {/* <div className="absolute top-0 left-0 right-0 h-12 z-10 bg-black pointer-events-none" /> */}
-            <div className="absolute bottom-0 left-0 right-0 h-20 z-10 pointer-events-none bg-gradient-to-t from-black/70 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 h-20 z-10 pointer-events-none bg-linear-to-t from-black/70 to-transparent" />
 
             {/* Click to play/pause — centre area only */}
             <div
@@ -305,7 +308,7 @@ export default function VideoPlayer({
                 </div>
             )}
 
-            {/* Custom controls bar */true &&
+            {/* Custom controls bar */
                 <div
                     className="absolute bottom-0 left-0 right-0 z-30 transition-opacity duration-300"
                     style={{ opacity: showControls || !isPlaying ? 1 : 0 }}
