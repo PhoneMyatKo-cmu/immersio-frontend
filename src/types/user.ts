@@ -37,3 +37,14 @@ export const EstimatedLevelValues = {
     Intermediate: 'intermediate',
     Advanced: 'advanced'
 } as const;
+
+export type Video = {
+    id: number;
+    youtube_video_id: string;
+    title: string;
+    channel_name: string;
+    created_at: string;
+    duration_seconds: number;
+    thumbnail_url: string;
+    difficulty_level: EstimatedLevel;
+}
