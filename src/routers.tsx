@@ -1,8 +1,12 @@
 import { Route, Routes } from 'react-router-dom';
 import { MainLayout } from './MainLayout';
 import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import ProfilePage from './pages/ProfilePage';
+import RegisterPage from './pages/RegisterPage';
 import SubmissionPage from './pages/SubmissionPage';
 import VideoPlaybackPage from './pages/VideoPlaybackPage';
+
 export function AppRouter() {
     return (
         <Routes >
@@ -10,6 +14,9 @@ export function AppRouter() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/submit" element={<SubmissionPage />} />
                 <Route path="/video/:videoId" element={<VideoPlaybackPage/>} />
+                <Route path="/login" element={<LoginPage/>}/>
+                <Route path="/register" element={<RegisterPage/>}/>
+                <Route path="/profile" element={<ProfilePage/>}/>
             </Route>
          </Routes>
     );

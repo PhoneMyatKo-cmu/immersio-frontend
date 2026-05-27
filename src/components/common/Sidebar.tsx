@@ -1,14 +1,21 @@
 // components/Sidebar/Sidebar.tsx
-import { BookOpen, ChevronRight, Home, RefreshCw } from 'lucide-react';
+import { BookOpen, ChevronRight, Home, LogIn, RefreshCw, User } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 interface SidebarItem {
     icon: React.ReactNode;
     label: string;
     to: string;
+    onClick?: () => void;
 }
 
+const isLoggedIn = !!localStorage.getItem('accessToken');
+
 const navItems: SidebarItem[] = [
+    { icon: isLoggedIn ? <User size={20} /> : <LogIn size={20} />,
+        label: isLoggedIn ? 'Profile' : 'Login',
+        to: isLoggedIn ? '/profile' : '/login'
+    },
     { icon: <Home size={20} />, label: 'Home', to: '/' },
     { icon: <BookOpen size={20} />, label: 'Library', to: '/' },
     { icon: <RefreshCw size={20} />, label: 'Review', to: '/' },
