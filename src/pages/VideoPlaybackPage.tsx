@@ -31,14 +31,8 @@ function VideoPlaybackPage() {
     const [clickedTimestamp, setClickTimestamp] = useState<number>(0)
     const [lookupResult,  setLookupResult]  = useState<LookupResult | null>(null)
     const [isLookupLoading, setIsLookupLoading] = useState(false)
-    const [isSaved, setIsSaved] = useState(false) //will be implemented later
     const [isLookupOpen, setIsLookupOpen] = useState(false)
-    
-    async function handleSave() {
-    if (!lookupResult || isSaved) return
-    // TO-DO in phase 2
-    setIsSaved(true)
-        }
+   
     
     useEffect(() => {
         if (!videoId) {
@@ -71,7 +65,6 @@ function VideoPlaybackPage() {
         
         setIsLookupLoading(true)
         setIsLookupOpen(true)
-        setIsSaved(false)
 
         vocabApi.getVocabAndContextSentence(selectedToken, videoId, clickedTimestamp)
             .then(response => {
@@ -126,8 +119,7 @@ function VideoPlaybackPage() {
                                 <LookupPanel
                                     result={lookupResult}
                                     isLoading={isLookupLoading}
-                                    isSaved={isSaved}
-                                    onSave={handleSave}
+                                    video_id={videoId}
                                     onExplain={() => { /* implement next */ }}
                                         onClose={() => setIsLookupOpen(false) }
                                 />
@@ -146,9 +138,8 @@ function VideoPlaybackPage() {
                              >
                                     <LookupPanel
                                     result={lookupResult}
-                                                isLoading={isLookupLoading}
-                                                isSaved={isSaved}
-                                                onSave={handleSave}
+                                isLoading={isLookupLoading}
+                                video_id={videoId}
                                                 onExplain={() => { /* implement next */ }}
                                                     onClose={() => setIsLookupOpen(false) }
 

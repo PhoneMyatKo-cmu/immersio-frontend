@@ -1,4 +1,4 @@
-import type { ContextRequest } from "../types/vocabContext";
+import type { ContextRequest, SaveVocab } from "../types/vocabContext";
 import { apiClient } from "./client";
 
 export const vocabApi = {
@@ -11,4 +11,14 @@ export const vocabApi = {
 
   getContextualExplanation: (contextRequest: ContextRequest) =>
     apiClient.post("/context-explanation", contextRequest),
+
+  checkSavedVocab: (vocabId: number) =>
+    apiClient.get("/get-vocab/check-duplicate", {
+      params: {
+        vocab_id: vocabId,
+      },
+    }),
+
+  saveVocabForUser: (saveVocab: SaveVocab) =>
+    apiClient.post("/get-vocab/save", saveVocab),
 };

@@ -1,4 +1,6 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { useVocabSave } from "../../hooks/useVocabSave"
 import PronunciationButton from "../common/PronunciationButton"
 import ContextualExplanation from "./ContextualExplanation"
 
@@ -35,10 +37,9 @@ export interface LookupResult {
 }
 
 interface LookupPanelProps {
-    result:          LookupResult | null
+    result: LookupResult | null
+    video_id:number
     isLoading:       boolean
-    isSaved:         boolean
-    onSave:          () => void
     onExplain:       () => void
     onClose:         () => void
 }
@@ -119,13 +120,11 @@ function EmptyState() {
 export default function LookupPanel({
     result,
     isLoading,
-    isSaved,
-    onSave,
-    onExplain,
-    onClose,
+    video_id,
 }: LookupPanelProps) {
 
     const [showAllMeanings, setShowAllMeanings] = useState(false)
+    const { isSaved, isAuthenticated,onSave } = useVocabSave(result?.vocab_id ?? null)
 
     const jlptStyle = result?.jlpt_tier
         ? JLPT_STYLES[result.jlpt_tier]
@@ -140,7 +139,27 @@ export default function LookupPanel({
     // Primary POS from first sense
     const primaryPos = result?.meanings[0]?.pos ?? null
     console.log(primaryPos)
-    const tempTranslation=result?.sentence_translation
+    const tempTranslation = result?.sentence_translation
+    const navigate=useNavigate()
+
+    const onSaveBtnClick = (() => {
+        if (!result) {
+            console.log("Result is null"); return
+        }
+        onSave({
+            vocab_id: result?.vocab_id,
+            video_id: video_id,
+            sentence_id: result?.context_sentence.id,
+            timestamp:result?.context_sentence.start
+            
+        })
+    })
+    
+
+
+    const onLogInClick = () => {
+        navigate("/login")
+    }
 
     return (
         <div className="flex flex-col h-full bg-greygreen">
@@ -209,20 +228,40 @@ export default function LookupPanel({
                                         {result.jlpt_tier}
                                     </span>
                                 )}
-                                <button
-                                    onClick={onSave}
+                                {
+                                    isAuthenticated && 
+                                       <button
+                                    onClick={onSaveBtnClick}
                                     disabled={isSaved}
                                     className={`
                                         flex items-center gap-1.5 px-3 py-1.5 rounded-lg
                                         text-xs font-medium transition-all duration-200
                                         ${isSaved
-                                            ? "bg-teal/20 text-teal cursor-default"
-                                            : "bg-teal text-white hover:bg-teal/80 active:scale-95"
+                                            ? "bg-teal/20 text-teal-500 cursor-default"
+                                            : "bg-teal text-white hover:bg-teal/80 active:scale-95 cursor-pointer"
                                         }
                                     `}
+
                                 >
-                                    {isSaved ? "✓ Saved" : "+ Save"}
-                                </button>
+                                    {isSaved ? "✓ Saved" : " + Save"}
+                                </button>  
+                                }
+
+                                 {
+                                    !isAuthenticated && 
+                                       <button
+                                    onClick={onLogInClick}
+                                    className={`
+                                        flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                                        text-xs font-medium transition-all duration-200
+                                        text-teal-500 cursor-pointer
+
+                                                                        `}
+
+                                >
+                                    Log In to Save
+                                </button>  
+                                }                              
                             </div>
                         </div>
 

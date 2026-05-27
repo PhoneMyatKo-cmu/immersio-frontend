@@ -1,6 +1,8 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { vocabApi } from "../../api/vocab_context"
 import type { ContextResponse, ContextualExplanationProps, ExampleSentence } from "../../types/vocabContext"
+import { Modal } from "../common/Modal"
 
 
 
@@ -107,6 +109,8 @@ export default function ContextualExplanation({
     const [isLoading, setIsLoading] = useState(false)
     const [error,     setError]     = useState<string | null>(null)
     const [hasFetched, setHasFetched] = useState(false)
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const navigate = useNavigate()
 
     async function handleFetch() {
         if (hasFetched || isLoading) return
@@ -114,51 +118,38 @@ export default function ContextualExplanation({
         setIsLoading(true)
         setError(null)
 
-        vocabApi.getContextualExplanation(request).then(response=>
-        {
+        vocabApi.getContextualExplanation(request).then(response => {
             setData(response.data)
             setHasFetched(true)
-        } ).catch (e=> {
-            const message = e?.response?.status === 503
-                ? "AI explanation is temporarily unavailable. Please try again later."
-                : "Something went wrong. Please try again."
-            setError(message)
-        } ).finally (()=>{
+        }).catch(e => {
+            const status = e?.response?.status
+
+            if (status === 401) {
+                setIsModalOpen(true)
+                setError("Please log in to use this feature.")
+                return
+            }
+
+            setError(
+                status === 503
+                    ? "AI explanation is temporarily unavailable. Please try again later."
+                    : "Something went wrong. Please try again."
+            )
+        }).finally(() => {
             setIsLoading(false)
         })
     }
 
-    // ── Not yet requested ─────────────────────────────────────────────────────
-    if (!hasFetched && !isLoading) {
-        return (
-            <button
-                onClick={handleFetch}
-                className="
-                    w-full flex items-center justify-center gap-2
-                    py-2.5 px-4 rounded-lg border border-white/12
-                    text-sm text-white/60 hover:text-white
-                    hover:border-white/25 hover:bg-white/4
-                    transition-all duration-200 active:scale-[0.98]
-                "
-            >
-                <span className="text-base leading-none">✦</span>
-                Explain in context
-            </button>
-        )
-    }
+    let content: React.ReactNode = null
 
-    // ── Loading ───────────────────────────────────────────────────────────────
     if (isLoading) {
-        return (
+        content = (
             <div className="border-t border-white/6 pt-4">
                 <LoadingState />
             </div>
         )
-    }
-
-    // ── Error ─────────────────────────────────────────────────────────────────
-    if (error) {
-        return (
+    } else if (error) {
+        content = (
             <div className="border-t border-white/6 pt-4">
                 <div className="flex flex-col items-center gap-3 py-3 text-center">
                     <p className="text-sm text-white/40 leading-relaxed">
@@ -179,13 +170,25 @@ export default function ContextualExplanation({
                 </div>
             </div>
         )
-    }
-
-    // ── Response ──────────────────────────────────────────────────────────────
-    if (!data) return null
-
-    return (
-        <div className="border-t border-white/6 pt-4 space-y-4">
+    } else if (!hasFetched) {
+        content = (
+            <button
+                onClick={handleFetch}
+                className="
+                    w-full flex items-center justify-center gap-2
+                    py-2.5 px-4 rounded-lg border border-white/12
+                    text-sm text-white/60 hover:text-white
+                    hover:border-white/25 hover:bg-white/4
+                    transition-all duration-200 active:scale-[0.98]
+                "
+            >
+                <span className="text-base leading-none">✦</span>
+                Explain in context
+            </button>
+        )
+    } else if (data) {
+        content = (
+            <div className="border-t border-white/6 pt-4 space-y-4">
 
             {/* ── Contextual explanation ── */}
             <div>
@@ -233,6 +236,23 @@ export default function ContextualExplanation({
                     Use the explanation as a guide only.
                 </p>
             )}
-        </div>
+            </div>
+        )
+    }
+
+    return (
+        <>
+            {content}
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                message="Log in to use this feature!"
+                title="Log In?"
+                confirmText="Log In"
+                onConfirm={() => {
+                    navigate("/login")
+                }}
+            />
+        </>
     )
 }

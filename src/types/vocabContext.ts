@@ -24,3 +24,10 @@ export interface ContextualExplanationProps {
   request: ContextRequest;
   surfaceForm: string;
 }
+
+export interface SaveVocab {
+  vocab_id: number;
+  video_id: number;
+  sentence_id: number;
+  timestamp: number;
+}
