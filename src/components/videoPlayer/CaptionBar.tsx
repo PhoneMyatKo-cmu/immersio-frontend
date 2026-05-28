@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 interface Token {
     surface:         string
@@ -32,12 +32,16 @@ interface CaptionBarProps {
 //     N1: "text-red-400",
 // }
 
-function getCurrentIndex(captions: Caption[], currentTime: number): number {
+function getCurrentIndex(captions: Caption[], currentTime: number): number | null {
+    if (!captions.length || !Number.isFinite(currentTime)) return null
+    if (currentTime < captions[0].start_time) return null
+
     for (let i = 0; i < captions.length; i++) {
-        if (currentTime >= captions[i].start_time && currentTime <= captions[i].end_time) {
+        if (currentTime >= captions[i].start_time && currentTime < captions[i].end_time) {
             return i
         }
     }
+
     // Between captions — find the next upcoming one
     for (let i = 0; i < captions.length; i++) {
         if (captions[i].start_time > currentTime) {
@@ -84,7 +88,7 @@ function CaptionLine({
     return (
         <div
             className={`
-                transition-all duration-300 ease-out
+                transition-all duration-150 ease-out
                 flex flex-wrap items-center justify-center gap-x-0.5 gap-y-1
                 px-4 py-1 text-center font-japanese leading-relaxed
                 ${opacity} ${scale} ${fontSize}
@@ -138,7 +142,11 @@ export default function CaptionBar({
     currentTime,
     onWordClick,
 }: CaptionBarProps) {
-    const currentIndex    = getCurrentIndex(captions, currentTime)
+    const sortedCaptions = useMemo(
+        () => [...captions].sort((a, b) => a.start_time - b.start_time),
+        [captions]
+    )
+    const currentIndex    = getCurrentIndex(sortedCaptions, currentTime)
     const containerRef    = useRef<HTMLDivElement>(null)
     const lineRefs        = useRef<(HTMLDivElement | null)[]>([])
     const [isHovered, setIsHovered] = useState(false)
@@ -146,17 +154,19 @@ export default function CaptionBar({
     // Scroll current caption into centre
     useEffect(() => {
         if (isHovered) return
+        if (currentIndex === null) return
+
         const currentEl = lineRefs.current[currentIndex]
         if (!currentEl || !containerRef.current) return
 
         currentEl.scrollIntoView({
-            behavior: "smooth",
+            behavior: "auto",
             block:    "center",
             inline:   "nearest",
         })
     }, [currentIndex, isHovered])
 
-    if (!captions.length) {
+    if (!sortedCaptions.length) {
         return (
             <div className="h-32 flex items-center justify-center">
                 <p className="text-white/30 text-sm">No captions available</p>
@@ -211,8 +221,8 @@ export default function CaptionBar({
                 {/* Top padding so first caption can scroll to centre */}
                 <div style={{ height: "60px" }} />
 
-                {captions.map((caption, i) => {
-                    const position = i - currentIndex
+                {sortedCaptions.map((caption, i) => {
+                    const position = currentIndex === null ? i + 1 : i - currentIndex
 
                     // Only render captions near current for performance
                     if (Math.abs(position) > 5) {

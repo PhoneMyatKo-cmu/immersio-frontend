@@ -138,7 +138,7 @@ export default function LookupPanel({
 
     // Primary POS from first sense
     const primaryPos = result?.meanings[0]?.pos ?? null
-    console.log(primaryPos)
+    // console.log(primaryPos)
     const tempTranslation = result?.sentence_translation
     const navigate=useNavigate()
 
