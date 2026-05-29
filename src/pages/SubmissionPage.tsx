@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { youtubeUrlSubmissionApi } from "../api/youtubeUrlSubmission";
 import { Modal } from "../components/common/Modal";
 import Spinner from "../components/common/Spinner";
@@ -16,13 +16,16 @@ function SubmissionPage() {
         variant: 'info' | 'success' | 'warning' | 'error';
         title?: string;
         confirmText?: string;
+        onConfirm?: () => void
+        cancelRequired?:boolean
     }>({
         isOpen: false,
         message: '',
         variant: 'info',
         
     });
-    
+    const navigate = useNavigate()
+
     function handleChange(e) {
         setFormData({
             ...formData,
@@ -42,7 +45,11 @@ function SubmissionPage() {
                     title:  response.data.message.startsWith("Successful")? "Success" : "Duplicate",
                     message: response.data.message,
                    variant: response.data.message.startsWith("Successful") ? "success" : "info",
-                    confirmText:"Proceed to playback interface.",
+                   confirmText: "Proceed to playback interface.",
+                   onConfirm: () => {
+                        navigate("/video/"+response.data.video_id)
+                   },
+                   cancelRequired:true,
                 });
              }
         ).catch(error => {
@@ -128,6 +135,8 @@ function SubmissionPage() {
                 message={modalState.message}
             variant={modalState.variant}
             confirmText={modalState.confirmText}
+            onConfirm={modalState.onConfirm}
+            cancelRequired={modalState.cancelRequired}
             />
     </>
 }
