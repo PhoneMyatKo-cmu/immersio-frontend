@@ -1,10 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react"
 
 interface VideoPlayerProps {
     videoId:       string
     onTimeUpdate?: (currentTime: number) => void
     onReady?:      () => void
     onEnded?:      () => void
+    showControls?: boolean
+    enableOverlayClick?: boolean
+}
+
+export interface VideoPlayerHandle {
+    play: () => void
+    pause: () => void
+    togglePlay: () => void
+    seekTo: (seconds: number) => void
+    getCurrentTime: () => number
+    isPlaying: () => boolean
 }
 
 declare global {
@@ -28,12 +39,14 @@ function formatTime(seconds: number): string {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function VideoPlayer({
+const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function VideoPlayer({
     videoId,
     onTimeUpdate,
     onReady,
     onEnded,
-}: VideoPlayerProps) {
+    showControls: shouldShowControls = true,
+    enableOverlayClick = true,
+}: VideoPlayerProps, ref) {
     const containerRef   = useRef<HTMLDivElement>(null)
     const playerRef = useRef < YT.Player | null>(null)
     const intervalRef    = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -155,6 +168,14 @@ export default function VideoPlayer({
         isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo()
     }, [isPlaying])
 
+    const play = useCallback(() => {
+        playerRef.current?.playVideo()
+    }, [])
+
+    const pause = useCallback(() => {
+        playerRef.current?.pauseVideo()
+    }, [])
+
     const toggleMute = useCallback(() => {
         if (!playerRef.current) return
         if (isMuted) { playerRef.current.unMute();  setIsMuted(false) }
@@ -173,6 +194,15 @@ export default function VideoPlayer({
         playerRef.current?.seekTo(seconds, true)
         setCurrentTime(seconds)
     }, [])
+
+    useImperativeHandle(ref, () => ({
+        play,
+        pause,
+        togglePlay,
+        seekTo,
+        getCurrentTime: () => playerRef.current?.getCurrentTime() ?? currentTime,
+        isPlaying: () => isPlaying,
+    }), [play, pause, togglePlay, seekTo, currentTime, isPlaying])
 
     // ── Progress bar interaction ───────────────────────────────────────────────
 
@@ -289,11 +319,13 @@ export default function VideoPlayer({
             <div className="absolute bottom-0 left-0 right-0 h-20 z-10 pointer-events-none bg-linear-to-t from-black/70 to-transparent" />
 
             {/* Click to play/pause — centre area only */}
-            <div
-                className="absolute inset-0 z-20 cursor-pointer"
-                style={{ top: "48px", bottom: "48px" }}
-                onClick={togglePlay}
-            />
+            {enableOverlayClick && (
+                <div
+                    className="absolute inset-0 z-20 cursor-pointer"
+                    style={{ top: "48px", bottom: "48px" }}
+                    onClick={togglePlay}
+                />
+            )}
 
             {/* Loading state */}
             {!isReady && (
@@ -308,7 +340,7 @@ export default function VideoPlayer({
                 </div>
             )}
 
-            {/* Custom controls bar */
+            {shouldShowControls && (
                 <div
                     className="absolute bottom-0 left-0 right-0 z-30 transition-opacity duration-300"
                     style={{ opacity: showControls || !isPlaying ? 1 : 0 }}
@@ -405,7 +437,10 @@ export default function VideoPlayer({
                             {isFullscreen ? "⛶" : "⛶"}
                         </button>
                     </div>
-                </div>}
+                </div>
+            )}
         </div>
     )
-}
+})
+
+export default VideoPlayer

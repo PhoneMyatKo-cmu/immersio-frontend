@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
 import { captionApi } from "../api/caption"
 import { vocabApi } from "../api/vocab_context"
@@ -7,7 +7,7 @@ import BottomSheet from "../components/videoPlayer/BottomSheet"
 import type { Caption } from "../components/videoPlayer/CaptionBar"
 import CaptionBar from "../components/videoPlayer/CaptionBar"
 import LookupPanel, { type LookupResult } from "../components/videoPlayer/LookUpPanel"
-import VideoPlayer from "../components/videoPlayer/VideoPlayer"
+import VideoPlayer, { type VideoPlayerHandle } from "../components/videoPlayer/VideoPlayer"
 import { useMediaQuery } from "../hooks/useMediaQuery"
 
 
@@ -35,6 +35,7 @@ function VideoPlaybackPage() {
     const [isLookupLoading, setIsLookupLoading] = useState(false)
     const [isLookupOpen, setIsLookupOpen] = useState(false)
     const [mode, setMode] = useState<PlaybackMode>("lookup")
+    const videoPlayerRef = useRef<VideoPlayerHandle | null>(null)
    
     
     useEffect(() => {
@@ -119,9 +120,12 @@ function VideoPlaybackPage() {
                     
                     <div className="w-full bg-black">
                         <VideoPlayer
+                            ref={videoPlayerRef}
                             videoId={videoMetaData!.youtube_video_id}
                             onTimeUpdate={setCurrentTime}
                             onReady={() => console.log("Player ready")}
+                            showControls={mode === "lookup"}
+                            enableOverlayClick={mode === "lookup"}
                         />
                     </div>
                     <div>
