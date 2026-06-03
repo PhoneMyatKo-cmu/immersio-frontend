@@ -19,6 +19,8 @@ export interface VideoMetadata {
   youtube_video_id: string;
 }
 
+type PlaybackMode = "lookup" | "shadowing"
+
 function VideoPlaybackPage() {
     
     const  videoId  = Number(useParams().videoId)
@@ -32,6 +34,7 @@ function VideoPlaybackPage() {
     const [lookupResult,  setLookupResult]  = useState<LookupResult | null>(null)
     const [isLookupLoading, setIsLookupLoading] = useState(false)
     const [isLookupOpen, setIsLookupOpen] = useState(false)
+    const [mode, setMode] = useState<PlaybackMode>("lookup")
    
     
     useEffect(() => {
@@ -89,6 +92,30 @@ function VideoPlaybackPage() {
             <div className="flex flex-col md:flex-row h-screen overflow-hidden" >
 
                 <div className="left  flex-col min-h-0 p-10 w-full md:basis-[70%] md:max-w-[70%] ">
+                    <div className="mb-4 inline-flex rounded-lg border border-white/10 bg-darkgrey p-1 text-sm">
+                        <button
+                            type="button"
+                            onClick={() => setMode("lookup")}
+                            className={`rounded-md px-3 py-1.5 transition-colors ${
+                                mode === "lookup"
+                                    ? "bg-teal text-white"
+                                    : "text-white/50 hover:text-white"
+                            }`}
+                        >
+                            Lookup
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setMode("shadowing")}
+                            className={`rounded-md px-3 py-1.5 transition-colors ${
+                                mode === "shadowing"
+                                    ? "bg-teal text-white"
+                                    : "text-white/50 hover:text-white"
+                            }`}
+                        >
+                            Shadowing
+                        </button>
+                    </div>
                     
                     <div className="w-full bg-black">
                         <VideoPlayer
