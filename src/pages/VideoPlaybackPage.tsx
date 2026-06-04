@@ -217,7 +217,7 @@ function VideoPlaybackPage() {
                         </button>
                     </div>
                     
-                    <div className="w-full bg-black">
+                    <div className={`w-full bg-black ${mode === "shadowing" ? "max-w-2xl mx-auto" : ""} `}>
                         <VideoPlayer
                             ref={videoPlayerRef}
                             videoId={videoMetaData!.youtube_video_id}
