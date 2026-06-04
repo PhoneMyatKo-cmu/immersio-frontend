@@ -8,6 +8,7 @@ import type { Caption } from "../components/videoPlayer/CaptionBar"
 import CaptionBar from "../components/videoPlayer/CaptionBar"
 import LookupPanel, { type LookupResult } from "../components/videoPlayer/LookUpPanel"
 import ShadowingControls from "../components/videoPlayer/ShadowingControls"
+import ShadowingRecorder from "../components/videoPlayer/ShadowingRecorder"
 import VideoPlayer, { type VideoPlayerHandle } from "../components/videoPlayer/VideoPlayer"
 import { useMediaQuery } from "../hooks/useMediaQuery"
 
@@ -230,6 +231,7 @@ function VideoPlaybackPage() {
                         />
                     </div>
                     {mode === "shadowing" && (
+                        <>
                         <ShadowingControls
                             currentCaption={shadowingCaption}
                             isPlaying={isVideoPlaying}
@@ -237,6 +239,35 @@ function VideoPlaybackPage() {
                             onPreviousSentence={handlePreviousSentence}
                             onNextSentence={handleNextSentence}
                         />
+<div className="mt-3 flex justify-center">
+            <ShadowingRecorder
+                captionKey={currentShadowingIndex}
+                disabled={isVideoPlaying}
+                submitRecording={async (audio) => {
+                    const form = new FormData()
+                    form.append("audio", audio, "take.webm")
+                    form.append("reference", shadowingCaption?.text ?? "")
+                    form.append("video_id", String(videoId))
+                    return
+                    // const res = await scoringApi.score(form)   // your endpoint
+                    // return res.data
+                }}
+                onScoringStart={() => {
+                    // setIsFeedbackOpen(true)      // opens the panel / bottom sheet
+                    // setFeedbackLoading(true)
+                }}
+                onScoringComplete={(result) => {
+                    // setFeedbackResult(result)
+                    // setFeedbackLoading(false)
+                }}
+                onError={(e) => {
+                    // setFeedbackLoading(false)
+                    console.error(e)
+                }}
+            />
+                            </div>
+                            </>
+
                     )}
                     {mode === "lookup" && (
                         <div>
