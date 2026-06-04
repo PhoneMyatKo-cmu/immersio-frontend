@@ -61,7 +61,7 @@ export default function ShadowingControls({
                 <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-white/35">
                     Shadowing sentence
                 </p>
-                <p className="min-h-12 rounded-md border border-white/8 bg-white/4 px-3 py-2 text-sm leading-relaxed text-white/85">
+                <p className="min-h-12 rounded-md border border-white/8 bg-white/4 px-3 py-2 text-lg text-teal-500 text-center leading-relaxed tracking-widest ">
                     {getCaptionText(currentCaption) || "Waiting for the current caption..."}
                 </p>
             </div>
