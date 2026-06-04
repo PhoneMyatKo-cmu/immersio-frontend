@@ -8,6 +8,7 @@ interface VideoPlayerProps {
     onPlayingChange?: (isPlaying: boolean) => void
     showControls?: boolean
     enableOverlayClick?: boolean
+    disableOverlayClick?: boolean
 }
 
 export interface VideoPlayerHandle {
@@ -48,6 +49,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
     onPlayingChange,
     showControls: shouldShowControls = true,
     enableOverlayClick = true,
+    disableOverlayClick = false,
 }: VideoPlayerProps, ref) {
     const containerRef   = useRef<HTMLDivElement>(null)
     const playerRef = useRef < YT.Player | null>(null)
@@ -327,6 +329,15 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
                     className="absolute inset-0 z-20 cursor-pointer"
                     style={{ top: "48px", bottom: "48px" }}
                     onClick={togglePlay}
+                />
+            )}
+
+            {/* Block all clicks on YouTube iframe (for shadowing mode) */}
+            {disableOverlayClick && (
+                <div
+                    className="absolute inset-0 z-20"
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ pointerEvents: "auto" }}
                 />
             )}
 

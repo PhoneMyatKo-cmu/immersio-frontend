@@ -55,6 +55,8 @@ function VideoPlaybackPage() {
     const [isLookupOpen, setIsLookupOpen] = useState(false)
     const [mode, setMode] = useState<PlaybackMode>("lookup")
     const [isVideoPlaying, setIsVideoPlaying] = useState(false)
+    const [currentShadowingIndex, setCurrentShadowingIndex] = useState(0)
+    const [pausedAtIndex, setPausedAtIndex] = useState<number | null>(null)
     const videoPlayerRef = useRef<VideoPlayerHandle | null>(null)
 
     const sortedCaptions = useMemo(
@@ -67,6 +69,10 @@ function VideoPlaybackPage() {
         [sortedCaptions, currentTime]
     )
 
+    // In shadowing mode, use explicit index tracking
+    const shadowingCaption = sortedCaptions[currentShadowingIndex]
+
+    // In lookup mode, use time-based caption
     const currentCaption = currentCaptionIndex === null
         ? null
         : sortedCaptions[currentCaptionIndex] ?? null
@@ -78,25 +84,59 @@ function VideoPlaybackPage() {
     }
 
     function handlePlayPause() {
-        videoPlayerRef.current?.togglePlay()
-    }
-
-    function handleRepeatSentence() {
-        if (currentCaptionIndex === null) return
-        seekToCaption(currentCaptionIndex)
+        const caption = sortedCaptions[currentShadowingIndex]
+        // If we're at or past the end of current caption, seek to start before playing
+        if (caption && currentTime >= caption.end_time ) {
+            videoPlayerRef.current?.seekTo(caption.start_time)
+            videoPlayerRef.current?.play()
+        } else {
+            videoPlayerRef.current?.togglePlay()
+        }
     }
 
     function handlePreviousSentence() {
-        if (currentCaptionIndex === null) return
-        seekToCaption(Math.max(0, currentCaptionIndex - 1))
+        const prevIndex = Math.max(0, currentShadowingIndex - 1)
+        setCurrentShadowingIndex(prevIndex)
+        seekToCaption(prevIndex)
     }
 
     function handleNextSentence() {
-        if (currentCaptionIndex === null) return
-        seekToCaption(Math.min(sortedCaptions.length - 1, currentCaptionIndex + 1))
+        const nextIndex = Math.min(sortedCaptions.length - 1, currentShadowingIndex + 1)
+        setCurrentShadowingIndex(nextIndex)
+        seekToCaption(nextIndex)
     }
-   
-    
+
+    // Initialize shadowing mode: start at index 0 and seek
+    useEffect(() => {
+        if (mode === "shadowing" && sortedCaptions.length > 0) {
+            setCurrentShadowingIndex(0)
+            setPausedAtIndex(null)
+            seekToCaption(0)
+        }
+    }, [mode])
+
+    // Auto-pause at end of current caption in shadowing mode
+    useEffect(() => {
+    if (mode !== "shadowing") return
+    const caption = sortedCaptions[currentShadowingIndex]
+    if (!caption) return
+
+    // Playhead is back inside this caption → the seek landed, re-arm the guard.
+    if (currentTime < caption.end_time) {
+        if (pausedAtIndex === currentShadowingIndex) setPausedAtIndex(null)
+        return
+    }
+
+    // Reached the end while playing → pause once.
+    if (
+        isVideoPlaying &&
+        pausedAtIndex !== currentShadowingIndex &&
+        currentTime >= caption.end_time 
+    ) {
+        videoPlayerRef.current?.pause()
+        setPausedAtIndex(currentShadowingIndex)
+    }
+}, [currentTime, currentShadowingIndex, sortedCaptions, mode, isVideoPlaying, pausedAtIndex])
     useEffect(() => {
         if (!videoId) {
             alert("No video Id.")//implement Error component
@@ -186,16 +226,16 @@ function VideoPlaybackPage() {
                             onPlayingChange={setIsVideoPlaying}
                             showControls={mode === "lookup"}
                             enableOverlayClick={mode === "lookup"}
+                            disableOverlayClick={mode === "shadowing"}
                         />
                     </div>
                     {mode === "shadowing" && (
                         <ShadowingControls
-                            currentCaption={currentCaption}
+                            currentCaption={shadowingCaption}
                             isPlaying={isVideoPlaying}
                             onPlayPause={handlePlayPause}
                             onPreviousSentence={handlePreviousSentence}
                             onNextSentence={handleNextSentence}
-                            onRepeatSentence={handleRepeatSentence}
                         />
                     )}
                     {mode === "lookup" && (

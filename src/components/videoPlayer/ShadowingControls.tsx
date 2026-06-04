@@ -1,4 +1,4 @@
-import { Pause, Play, RotateCcw, SkipBack, SkipForward } from "lucide-react"
+import { Pause, Play, SkipBack, SkipForward } from "lucide-react"
 import type { Caption } from "./CaptionBar"
 
 function getCaptionText(caption: Caption | null): string {
@@ -13,7 +13,6 @@ interface ShadowingControlsProps {
     onPlayPause: () => void
     onPreviousSentence: () => void
     onNextSentence: () => void
-    onRepeatSentence: () => void
 }
 
 function IconButton({
@@ -53,7 +52,6 @@ export default function ShadowingControls({
     onPlayPause,
     onPreviousSentence,
     onNextSentence,
-    onRepeatSentence,
 }: ShadowingControlsProps) {
     const hasCaption = Boolean(currentCaption)
 
@@ -82,14 +80,6 @@ export default function ShadowingControls({
                     onClick={onPlayPause}
                 >
                     {isPlaying ? <Pause size={20} /> : <Play size={20} />}
-                </IconButton>
-
-                <IconButton
-                    label="Repeat current sentence"
-                    onClick={onRepeatSentence}
-                    disabled={!hasCaption}
-                >
-                    <RotateCcw size={18} />
                 </IconButton>
 
                 <IconButton
