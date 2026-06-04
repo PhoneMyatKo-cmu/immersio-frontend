@@ -1,6 +1,12 @@
 import { Pause, Play, RotateCcw, SkipBack, SkipForward } from "lucide-react"
 import type { Caption } from "./CaptionBar"
 
+function getCaptionText(caption: Caption | null): string {
+    if (!caption) return ""
+    // Prefer tokens.surface joined together, fallback to text field if available
+    return caption.tokens?.map(t => t.surface).join("") || caption.text || ""
+}
+
 interface ShadowingControlsProps {
     currentCaption: Caption | null
     isPlaying: boolean
@@ -58,7 +64,7 @@ export default function ShadowingControls({
                     Shadowing sentence
                 </p>
                 <p className="min-h-12 rounded-md border border-white/8 bg-white/4 px-3 py-2 text-sm leading-relaxed text-white/85">
-                    {currentCaption?.text ?? "Waiting for the current caption..."}
+                    {getCaptionText(currentCaption) || "Waiting for the current caption..."}
                 </p>
             </div>
 

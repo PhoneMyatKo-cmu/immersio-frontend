@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
 import { captionApi } from "../api/caption"
 import { vocabApi } from "../api/vocab_context"
@@ -7,6 +7,7 @@ import BottomSheet from "../components/videoPlayer/BottomSheet"
 import type { Caption } from "../components/videoPlayer/CaptionBar"
 import CaptionBar from "../components/videoPlayer/CaptionBar"
 import LookupPanel, { type LookupResult } from "../components/videoPlayer/LookUpPanel"
+import ShadowingControls from "../components/videoPlayer/ShadowingControls"
 import VideoPlayer, { type VideoPlayerHandle } from "../components/videoPlayer/VideoPlayer"
 import { useMediaQuery } from "../hooks/useMediaQuery"
 
@@ -20,6 +21,24 @@ export interface VideoMetadata {
 }
 
 type PlaybackMode = "lookup" | "shadowing"
+
+function getCurrentCaptionIndex(captions: Caption[], currentTime: number): number | null {
+    if (!captions.length || !Number.isFinite(currentTime)) return null
+
+    for (let i = 0; i < captions.length; i++) {
+        if (currentTime >= captions[i].start_time && currentTime < captions[i].end_time) {
+            return i
+        }
+    }
+
+    for (let i = 0; i < captions.length; i++) {
+        if (captions[i].start_time > currentTime) {
+            return Math.max(0, i - 1)
+        }
+    }
+
+    return captions.length - 1
+}
 
 function VideoPlaybackPage() {
     
@@ -35,7 +54,47 @@ function VideoPlaybackPage() {
     const [isLookupLoading, setIsLookupLoading] = useState(false)
     const [isLookupOpen, setIsLookupOpen] = useState(false)
     const [mode, setMode] = useState<PlaybackMode>("lookup")
+    const [isVideoPlaying, setIsVideoPlaying] = useState(false)
     const videoPlayerRef = useRef<VideoPlayerHandle | null>(null)
+
+    const sortedCaptions = useMemo(
+        () => [...captions].sort((a, b) => a.start_time - b.start_time),
+        [captions]
+    )
+
+    const currentCaptionIndex = useMemo(
+        () => getCurrentCaptionIndex(sortedCaptions, currentTime),
+        [sortedCaptions, currentTime]
+    )
+
+    const currentCaption = currentCaptionIndex === null
+        ? null
+        : sortedCaptions[currentCaptionIndex] ?? null
+
+    function seekToCaption(index: number) {
+        const caption = sortedCaptions[index]
+        if (!caption) return
+        videoPlayerRef.current?.seekTo(caption.start_time)
+    }
+
+    function handlePlayPause() {
+        videoPlayerRef.current?.togglePlay()
+    }
+
+    function handleRepeatSentence() {
+        if (currentCaptionIndex === null) return
+        seekToCaption(currentCaptionIndex)
+    }
+
+    function handlePreviousSentence() {
+        if (currentCaptionIndex === null) return
+        seekToCaption(Math.max(0, currentCaptionIndex - 1))
+    }
+
+    function handleNextSentence() {
+        if (currentCaptionIndex === null) return
+        seekToCaption(Math.min(sortedCaptions.length - 1, currentCaptionIndex + 1))
+    }
    
     
     useEffect(() => {
@@ -124,21 +183,34 @@ function VideoPlaybackPage() {
                             videoId={videoMetaData!.youtube_video_id}
                             onTimeUpdate={setCurrentTime}
                             onReady={() => console.log("Player ready")}
+                            onPlayingChange={setIsVideoPlaying}
                             showControls={mode === "lookup"}
                             enableOverlayClick={mode === "lookup"}
                         />
                     </div>
-                    <div>
-                        <CaptionBar
-                            captions={captions}
-                            currentTime={currentTime}
-                            onWordClick={(token, timestamp) => {
-                                setIsLookupOpen(true)
-                                setSelectedToken(token)    
-                                setClickTimestamp(timestamp)
-                            }}
+                    {mode === "shadowing" && (
+                        <ShadowingControls
+                            currentCaption={currentCaption}
+                            isPlaying={isVideoPlaying}
+                            onPlayPause={handlePlayPause}
+                            onPreviousSentence={handlePreviousSentence}
+                            onNextSentence={handleNextSentence}
+                            onRepeatSentence={handleRepeatSentence}
                         />
-                    </div>
+                    )}
+                    {mode === "lookup" && (
+                        <div>
+                            <CaptionBar
+                                captions={captions}
+                                currentTime={currentTime}
+                                onWordClick={(token, timestamp) => {
+                                    setIsLookupOpen(true)
+                                    setSelectedToken(token)    
+                                    setClickTimestamp(timestamp)
+                                }}
+                            />
+                        </div>
+                    )}
 
                 </div>
 

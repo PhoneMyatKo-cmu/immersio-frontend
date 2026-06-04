@@ -5,6 +5,7 @@ interface VideoPlayerProps {
     onTimeUpdate?: (currentTime: number) => void
     onReady?:      () => void
     onEnded?:      () => void
+    onPlayingChange?: (isPlaying: boolean) => void
     showControls?: boolean
     enableOverlayClick?: boolean
 }
@@ -44,6 +45,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
     onTimeUpdate,
     onReady,
     onEnded,
+    onPlayingChange,
     showControls: shouldShowControls = true,
     enableOverlayClick = true,
 }: VideoPlayerProps, ref) {
@@ -116,6 +118,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
                 onStateChange: (e: any) => {
                     const playing = e.data === 1
                     setIsPlaying(playing)
+                    onPlayingChange?.(playing)
                     if (playing) startTracking()
                     else         stopTracking()
                     if (e.data === 0) onEnded?.()
