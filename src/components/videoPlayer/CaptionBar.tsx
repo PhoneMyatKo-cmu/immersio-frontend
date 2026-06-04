@@ -10,7 +10,7 @@ interface Token {
 }
 
 export interface Caption {
-    fragment_index: number
+    index: number
     text:           string
     start_time:     number
     end_time:       number
@@ -228,7 +228,7 @@ export default function CaptionBar({
                     if (Math.abs(position) > 5) {
                         return (
                             <div
-                                key={caption.fragment_index}
+                                key={caption.index}
                                 ref={(el) => { lineRefs.current[i] = el }}
                                 style={{ height: "40px" }}
                             />
@@ -237,7 +237,7 @@ export default function CaptionBar({
 
                     return (
                         <div
-                            key={caption.fragment_index}
+                            key={caption.index}
                             ref={(el) => { lineRefs.current[i] = el }}
                         >
                             <CaptionLine
