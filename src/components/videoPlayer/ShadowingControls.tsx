@@ -1,11 +1,6 @@
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react"
+import { getCaptionText } from "../../utils/captions"
 import type { Caption } from "./CaptionBar"
-
-function getCaptionText(caption: Caption | null): string {
-    if (!caption) return ""
-    // Prefer tokens.surface joined together, fallback to text field if available
-    return caption.tokens?.map(t => t.surface).join("") || caption.text || ""
-}
 
 interface ShadowingControlsProps {
     currentCaption: Caption | null

@@ -1,4 +1,4 @@
-import { AudioLines, Languages, Mic, Sparkles, X } from "lucide-react"
+import { AudioLines, Languages, Mic, X } from "lucide-react"
 
 /* ============================================================================
  * Internal UI type — STABLE. The panel renders this shape.
@@ -12,17 +12,16 @@ export interface ShadowingFeedback {
     /** Raw character error rate, 0–1 (lower is better). Shown as a hint. */
     cer?: number
     /** Prosodic similarity, 0–100 (higher is better). */
-    prosodyScore?: number
+    pitch_score: unknown
     /** URL or data-URI of the server-rendered prosody plot (pitch / energy curve). */
-    prosodyPlotUrl?: string
     /** Free-text coaching from the LLM. */
-    feedback?: string
     /** Optional short bullet tips, rendered as a list if present. */
-    feedbackPoints?: string[]
     /** What the learner was asked to say. */
-    targetText?: string
+    user_katakana: string
     /** What ASR heard them say. */
-    recognizedText?: string
+    caption_katakana: string
+
+    pitch_comparison_figure:unknown
 }
 
 /* ============================================================================
@@ -78,13 +77,13 @@ export interface ShadowingFeedbackPanelProps {
 }
 
 function scoreColor(score: number): string {
-    if (score >= 80) return "text-teal"
+    if (score >= 80) return "text-teal-500"
     if (score >= 60) return "text-amber-400"
     return "text-red-400"
 }
 
 function barColor(score: number): string {
-    if (score >= 80) return "bg-teal"
+    if (score >= 80) return "bg-teal-500"
     if (score >= 60) return "bg-amber-400"
     return "bg-red-400"
 }
@@ -99,16 +98,17 @@ function ScoreCard({
     hint?: string
 }) {
     const has = typeof score === "number"
+    console.log("Type of score:",typeof score)
     return (
         <div className="rounded-lg border border-white/10 bg-white/5 p-3">
             <p className="text-xs text-white/50">{label}</p>
-            <p className={`mt-1 text-2xl font-medium tabular-nums ${has ? scoreColor(score!) : "text-white/30"}`}>
-                {has ? `${score}` : "—"}
+            <p className={`mt-1 text-2xl font-medium tabular-nums ${has ? scoreColor(score!) : "text-teal-500"}`}>
+                {has ? `${score.toFixed(2)}` : "—"}
                 {has && <span className="text-base text-white/40">%</span>}
             </p>
             <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/10">
                 <div
-                    className={`h-full rounded-full ${has ? barColor(score!) : ""}`}
+                    className={`h-full rounded-full ${has ? barColor(score!) : "bg-amber-500"}`}
                     style={{ width: has ? `${Math.max(0, Math.min(100, score!))}%` : "0%" }}
                 />
             </div>
@@ -174,37 +174,37 @@ export default function ShadowingFeedbackPanel({
                         {/* Scores */}
                         <div className="grid grid-cols-2 gap-3">
                             <ScoreCard
-                                label="Pronunciation match"
-                                score={result.matchScore}
-                                hint={
-                                    typeof result.cer === "number"
-                                        ? `CER ${result.cer.toFixed(2)}`
-                                        : undefined
-                                }
+                                label="Pronunciation Accuracy"
+                                score={Number(result.cer * 100)}
+                                // hint={
+                                //     typeof result.cer === "number"
+                                //         ? `CER ${result.cer.toFixed(2)}`
+                                //         : undefined
+                                // }
                             />
-                            <ScoreCard label="Prosody" score={result.prosodyScore} />
+                            <ScoreCard label="Pitch Accent Similarity" score={result.pitch_score.score} />
                         </div>
 
                         {/* Transcript comparison */}
-                        {(result.targetText || result.recognizedText) && (
+                        {(result.user_katakana || result.caption_katakana) && (
                             <div className="rounded-lg border border-white/10 bg-white/5 p-3">
                                 <div className="mb-2 flex items-center gap-1.5 text-xs text-white/50">
                                     <Languages className="h-3.5 w-3.5" />
                                     Transcript
                                 </div>
-                                {result.targetText && (
+                                {result.caption_katakana && (
                                     <div className="mb-2">
                                         <p className="text-[11px] text-white/30">Target</p>
                                         <p className="text-sm leading-relaxed text-white/80">
-                                            {result.targetText}
+                                            {result.caption_katakana}
                                         </p>
                                     </div>
                                 )}
-                                {result.recognizedText && (
+                                {result.user_katakana && (
                                     <div>
                                         <p className="text-[11px] text-white/30">You said</p>
                                         <p className="text-sm leading-relaxed text-white/80">
-                                            {result.recognizedText}
+                                            {result.user_katakana}
                                         </p>
                                     </div>
                                 )}
@@ -212,14 +212,14 @@ export default function ShadowingFeedbackPanel({
                         )}
 
                         {/* Prosody plot */}
-                        {result.prosodyPlotUrl && (
+                        {result.pitch_comparison_figure && (
                             <div>
                                 <div className="mb-2 flex items-center gap-1.5 text-xs text-white/50">
                                     <AudioLines className="h-3.5 w-3.5" />
                                     Pitch &amp; energy
                                 </div>
                                 <img
-                                    src={result.prosodyPlotUrl}
+                                    src={`data:image/png;base64,${result.pitch_comparison_figure}`}
                                     alt="Your pitch and energy compared to the native speaker"
                                     className="w-full rounded-lg border border-white/10 bg-black"
                                 />
@@ -227,7 +227,7 @@ export default function ShadowingFeedbackPanel({
                         )}
 
                         {/* AI feedback */}
-                        {(result.feedback || result.feedbackPoints?.length) && (
+                        {/* {(result.feedback || result.feedbackPoints?.length) && (
                             <div className="rounded-lg border border-teal/30 bg-teal/5 p-4">
                                 <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-teal">
                                     <Sparkles className="h-3.5 w-3.5" />
@@ -252,7 +252,7 @@ export default function ShadowingFeedbackPanel({
                                     </ul>
                                 ) : null}
                             </div>
-                        )}
+                        )} */}
                     </div>
                 )}
             </div>

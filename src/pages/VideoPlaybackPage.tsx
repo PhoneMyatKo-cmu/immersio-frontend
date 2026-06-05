@@ -15,7 +15,8 @@ import { useMediaQuery } from "../hooks/useMediaQuery"
 
 
 // temp
-import { mockFeedbackMid } from "../components/videoPlayer/shadowingMockResults"
+import { shadowingApi } from "../api/shadowing"
+import { getCaptionText } from "../utils/captions"
 
 export interface VideoMetadata {
   channel_name: string;
@@ -254,13 +255,15 @@ function VideoPlaybackPage() {
                                     submitRecording={async (audio, meta) => {
                     console.log(`[noise] ${meta.noiseDb?.toFixed(1)} dBFS — noisy=${meta.noisy}`)
                     const form = new FormData()
-                    form.append("audio", audio, "take.webm")
-                    form.append("reference", shadowingCaption?.text ?? "")
-                    form.append("video_id", String(videoId))
-                    return mockFeedbackMid
-                    // const res = await scoringApi.score(form)   // your endpoint
-                    // return res.data
-                }}
+                    form.append("file", audio, "take.webm")
+                    form.append("caption", getCaptionText(shadowingCaption))
+                    form.append("start_time", (shadowingCaption.start_time).toString())
+                    form.append("end_time",(shadowingCaption.end_time).toString())
+                    form.append("video_id", String(videoMetaData?.youtube_video_id))
+                    // return mockFeedbackMid
+                    const res = await shadowingApi.sendAudioForScore(form)   // your endpoint
+                    return res.data
+                }}  
                 onScoringStart={() => {
                     setIsFeedbackOpen(true)      // opens the panel / bottom sheet
                     setFeedbackLoading(true)
@@ -303,7 +306,6 @@ function VideoPlaybackPage() {
                         <ShadowingFeedbackPanel
                             result={feedbackResult}
                             isLoading={feedbackLoading}
-                            onClose={() => false}
                         />
                                                     ) :
                                                     (
