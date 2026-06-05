@@ -251,7 +251,8 @@ function VideoPlaybackPage() {
             <ShadowingRecorder
                 captionKey={currentShadowingIndex}
                 disabled={isVideoPlaying}
-                submitRecording={async (audio) => {
+                                    submitRecording={async (audio, meta) => {
+                    console.log(`[noise] ${meta.noiseDb?.toFixed(1)} dBFS — noisy=${meta.noisy}`)
                     const form = new FormData()
                     form.append("audio", audio, "take.webm")
                     form.append("reference", shadowingCaption?.text ?? "")
