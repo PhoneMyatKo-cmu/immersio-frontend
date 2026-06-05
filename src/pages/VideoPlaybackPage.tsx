@@ -7,11 +7,15 @@ import BottomSheet from "../components/videoPlayer/BottomSheet"
 import type { Caption } from "../components/videoPlayer/CaptionBar"
 import CaptionBar from "../components/videoPlayer/CaptionBar"
 import LookupPanel, { type LookupResult } from "../components/videoPlayer/LookUpPanel"
+import ShadowingFeedbackPanel from "../components/videoPlayer/PronuciationFeedbackPanel"
 import ShadowingControls from "../components/videoPlayer/ShadowingControls"
 import ShadowingRecorder from "../components/videoPlayer/ShadowingRecorder"
 import VideoPlayer, { type VideoPlayerHandle } from "../components/videoPlayer/VideoPlayer"
 import { useMediaQuery } from "../hooks/useMediaQuery"
 
+
+// temp
+import { mockFeedbackMid } from "../components/videoPlayer/shadowingMockResults"
 
 export interface VideoMetadata {
   channel_name: string;
@@ -59,6 +63,10 @@ function VideoPlaybackPage() {
     const [currentShadowingIndex, setCurrentShadowingIndex] = useState(0)
     const [pausedAtIndex, setPausedAtIndex] = useState<number | null>(null)
     const videoPlayerRef = useRef<VideoPlayerHandle | null>(null)
+    const [isFeedbackOpen, setIsFeedbackOpen] = useState<boolean>(false)
+    const [feedbackResult, setFeedbackResult] = useState(null)
+    const [feedbackLoading,setFeedbackLoading]=useState<boolean>(false)
+
 
     const sortedCaptions = useMemo(
         () => [...captions].sort((a, b) => a.start_time - b.start_time),
@@ -248,20 +256,20 @@ function VideoPlaybackPage() {
                     form.append("audio", audio, "take.webm")
                     form.append("reference", shadowingCaption?.text ?? "")
                     form.append("video_id", String(videoId))
-                    return
+                    return mockFeedbackMid
                     // const res = await scoringApi.score(form)   // your endpoint
                     // return res.data
                 }}
                 onScoringStart={() => {
-                    // setIsFeedbackOpen(true)      // opens the panel / bottom sheet
-                    // setFeedbackLoading(true)
+                    setIsFeedbackOpen(true)      // opens the panel / bottom sheet
+                    setFeedbackLoading(true)
                 }}
                 onScoringComplete={(result) => {
-                    // setFeedbackResult(result)
-                    // setFeedbackLoading(false)
+                    setFeedbackResult(result)
+                    setFeedbackLoading(false)
                 }}
                 onError={(e) => {
-                    // setFeedbackLoading(false)
+                    setFeedbackLoading(false)
                     console.error(e)
                 }}
             />
@@ -290,20 +298,31 @@ function VideoPlaybackPage() {
                         <div className=" flex-1 border-l min-h-0 border-white/10 overflow-y-auto  scrollbar-thin scrollbar-thumb-teal-500 scrollbar-track-black">
                            
                             <div className="p-6">
-                                <LookupPanel
+                    {mode === "shadowing" ? (
+                        <ShadowingFeedbackPanel
+                            result={feedbackResult}
+                            isLoading={feedbackLoading}
+                            onClose={() => false}
+                        />
+                                                    ) :
+                                                    (
+                            <LookupPanel
                                     result={lookupResult}
                                     isLoading={isLookupLoading}
                                     video_id={videoId}
                                     onExplain={() => { /* implement next */ }}
                                         onClose={() => setIsLookupOpen(false) }
                                 />
+    
+                            )}
+                                
                             </div>
                             
                         </div>
                     )}
                 </div>
                 {/* Mobile: bottom sheet */}
-                {isMobile &&
+                {isMobile && mode==='lookup' &&
                     (
                     <div className=" flex-1 border-l min-h-0 border-white/10 ">
                          <BottomSheet
@@ -316,6 +335,26 @@ function VideoPlaybackPage() {
                                 video_id={videoId}
                                                 onExplain={() => { /* implement next */ }}
                                                     onClose={() => setIsLookupOpen(false) }
+
+                                    />
+                         </BottomSheet>
+
+
+                    </div>
+                   
+                       )
+                }
+{isMobile && mode==='shadowing' &&
+                    (
+                    <div className=" flex-1 border-l min-h-0 border-white/10 ">
+                         <BottomSheet
+                            isOpen={isFeedbackOpen}
+                            onClose={() => setIsFeedbackOpen(false)}
+                             >
+                                    <ShadowingFeedbackPanel
+                                    result={feedbackResult}
+                                isLoading={feedbackLoading}
+                                                    onClose={() => setIsFeedbackOpen(false) }
 
                                     />
                          </BottomSheet>
