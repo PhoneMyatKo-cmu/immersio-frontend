@@ -1,4 +1,5 @@
 import { AudioLines, Languages, Mic, X } from "lucide-react"
+import ScoreExplanation from "./ScoreExplanation"
 
 /* ============================================================================
  * Internal UI type — STABLE. The panel renders this shape.
@@ -21,7 +22,11 @@ export interface ShadowingFeedback {
     /** What ASR heard them say. */
     caption_katakana: string
 
-    pitch_comparison_figure:unknown
+    pitch_comparison_figure: unknown
+    
+    user_pitch: []
+    
+    reference_pitch:[]
 }
 
 /* ============================================================================
@@ -175,7 +180,7 @@ export default function ShadowingFeedbackPanel({
                         <div className="grid grid-cols-2 gap-3">
                             <ScoreCard
                                 label="Pronunciation Accuracy"
-                                score={Number(result.cer * 100)}
+                                score={Number((1-result.cer) * 100)}
                                 // hint={
                                 //     typeof result.cer === "number"
                                 //         ? `CER ${result.cer.toFixed(2)}`
@@ -227,6 +232,19 @@ export default function ShadowingFeedbackPanel({
                         )}
 
                         {/* AI feedback */}
+                        <ScoreExplanation request={
+                            {
+                                 cer: result.cer,
+            pitch_score: result.pitch_score.score,
+            caption_katakana: result.caption_katakana,
+                                user_katakana: result.user_katakana,
+                                user_pitch: result.user_pitch,
+                                reference_pitch: result.reference_pitch,
+                                caption:result.caption_katakana
+                            }
+                        }
+                            
+                        />
                         {/* {(result.feedback || result.feedbackPoints?.length) && (
                             <div className="rounded-lg border border-teal/30 bg-teal/5 p-4">
                                 <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-teal">

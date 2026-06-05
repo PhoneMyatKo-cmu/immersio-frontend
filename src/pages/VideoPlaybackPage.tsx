@@ -106,12 +106,14 @@ function VideoPlaybackPage() {
 
     function handlePreviousSentence() {
         const prevIndex = Math.max(0, currentShadowingIndex - 1)
+        setFeedbackResult(null)
         setCurrentShadowingIndex(prevIndex)
         seekToCaption(prevIndex)
     }
 
     function handleNextSentence() {
         const nextIndex = Math.min(sortedCaptions.length - 1, currentShadowingIndex + 1)
+        setFeedbackResult(null)
         setCurrentShadowingIndex(nextIndex)
         seekToCaption(nextIndex)
     }
