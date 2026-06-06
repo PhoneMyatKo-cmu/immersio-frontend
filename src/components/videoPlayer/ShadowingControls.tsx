@@ -1,13 +1,24 @@
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react"
 import { getCaptionText } from "../../utils/captions"
 import type { Caption } from "./CaptionBar"
+import type { ShadowingSentence } from "../../types/shadowing"
 
 interface ShadowingControlsProps {
-    currentCaption: Caption | null
+    currentSentence: Caption | ShadowingSentence | null
     isPlaying: boolean
     onPlayPause: () => void
     onPreviousSentence: () => void
     onNextSentence: () => void
+}
+
+function getSentenceText(sentence: Caption | ShadowingSentence | null): string {
+    if (!sentence) return ""
+    // Check if it's a ShadowingSentence (has text property)
+    if ('text' in sentence && typeof sentence.text === 'string') {
+        return sentence.text
+    }
+    // Otherwise it's a Caption (has tokens array)
+    return getCaptionText(sentence as Caption)
 }
 
 function IconButton({
@@ -42,13 +53,13 @@ function IconButton({
 }
 
 export default function ShadowingControls({
-    currentCaption,
+    currentSentence,
     isPlaying,
     onPlayPause,
     onPreviousSentence,
     onNextSentence,
 }: ShadowingControlsProps) {
-    const hasCaption = Boolean(currentCaption)
+    const hasSentence = Boolean(currentSentence)
 
     return (
         <div className="border-t border-white/5 bg-darkgrey px-4 py-4 text-white">
@@ -57,7 +68,7 @@ export default function ShadowingControls({
                     Shadowing sentence
                 </p>
                 <p className="min-h-12 rounded-md border border-white/8 bg-white/4 px-3 py-2 text-lg text-teal-500 text-center leading-relaxed tracking-widest ">
-                    {getCaptionText(currentCaption) || "Waiting for the current caption..."}
+                    {getSentenceText(currentSentence) || "Waiting for the current sentence..."}
                 </p>
             </div>
 
@@ -65,7 +76,7 @@ export default function ShadowingControls({
                 <IconButton
                     label="Previous sentence"
                     onClick={onPreviousSentence}
-                    disabled={!hasCaption}
+                    disabled={!hasSentence}
                 >
                     <SkipBack size={18} />
                 </IconButton>
@@ -80,7 +91,7 @@ export default function ShadowingControls({
                 <IconButton
                     label="Next sentence"
                     onClick={onNextSentence}
-                    disabled={!hasCaption}
+                    disabled={!hasSentence}
                 >
                     <SkipForward size={18} />
                 </IconButton>

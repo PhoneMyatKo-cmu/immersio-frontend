@@ -2,11 +2,19 @@ import type { ContextRequest, SaveVocab } from "../types/vocabContext";
 import { apiClient } from "./client";
 
 export const vocabApi = {
-  getVocabAndContextSentence: (token, videoId: number, timestamp: number) =>
+  getVocabAndContextSentence: (
+    token,
+    videoId: number,
+    captionId: number,
+    captionText: string,
+  ) =>
     apiClient.post("/get-vocab", {
       vocab_surface_form: token.surface,
       video_id: videoId,
-      timestamp: timestamp,
+      caption: {
+        id: captionId,
+        text: captionText,
+      },
     }),
 
   getContextualExplanation: (contextRequest: ContextRequest) =>
@@ -19,6 +27,8 @@ export const vocabApi = {
       },
     }),
 
-  saveVocabForUser: (saveVocab: SaveVocab) =>
-    apiClient.post("/get-vocab/save", saveVocab),
+  saveVocabForUser: (saveVocab: SaveVocab) => {
+    console.log(saveVocab);
+    return apiClient.post("/get-vocab/save", saveVocab);
+  },
 };

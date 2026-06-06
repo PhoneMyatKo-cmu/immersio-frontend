@@ -10,6 +10,7 @@ interface Token {
 }
 
 export interface Caption {
+    id:number
     index: number
     text:           string
     start_time:     number
@@ -20,7 +21,7 @@ export interface Caption {
 interface CaptionBarProps {
     captions:    Caption[]
     currentTime: number
-    onWordClick: (token: Token, timestamp: number, sentenceId?: number) => void
+    onWordClick: (token: Token,  caption: Caption | null) => void
 }
 
 // JLPT tier colours for subtle word highlighting
@@ -60,7 +61,9 @@ function CaptionLine({
 }: {
     caption:     Caption
     position:    number
-    onWordClick: (token: Token, timestamp: number) => void
+        onWordClick: (token: Token, caption: Caption | null
+        
+    ) => void
     currentTime: number
 }) {
     const isCurrent  = position === 0
@@ -112,7 +115,7 @@ function CaptionLine({
                     <span
                         key={i}
                         onClick={isCurrent
-                            ? () => onWordClick(token, caption.start_time)
+                            ? () => onWordClick(token, caption)
                             : undefined
                         }
                         className={`

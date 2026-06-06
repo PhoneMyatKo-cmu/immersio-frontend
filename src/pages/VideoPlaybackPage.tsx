@@ -16,7 +16,9 @@ import { useMediaQuery } from "../hooks/useMediaQuery"
 
 // temp
 import { shadowingApi } from "../api/shadowing"
-import { getCaptionText } from "../utils/captions"
+import { sentenceApi } from "../api/shadowingSentence"
+import ShadowingProcessing from "../components/videoPlayer/ShadowingProcessing"
+import type { ShadowingSentence } from "../types/shadowing"
 
 export interface VideoMetadata {
   channel_name: string;
@@ -66,12 +68,20 @@ function VideoPlaybackPage() {
     const videoPlayerRef = useRef<VideoPlayerHandle | null>(null)
     const [isFeedbackOpen, setIsFeedbackOpen] = useState<boolean>(false)
     const [feedbackResult, setFeedbackResult] = useState(null)
-    const [feedbackLoading,setFeedbackLoading]=useState<boolean>(false)
+    const [feedbackLoading, setFeedbackLoading] = useState<boolean>(false)
+    const [sentences, setSentences] = useState<ShadowingSentence[]>([])
+    const [isShadowingReady, setIsShadowingReady] = useState<boolean>(false)
+    const [selectedCaption,setSelectedCaption]=useState<Caption | null>(null)
 
 
     const sortedCaptions = useMemo(
         () => [...captions].sort((a, b) => a.start_time - b.start_time),
         [captions]
+    )
+
+    const sortedSentences = useMemo(
+        () => [...sentences].sort((a, b) => a.start_time - b.start_time),
+        [sentences]
     )
 
     const currentCaptionIndex = useMemo(
@@ -80,7 +90,7 @@ function VideoPlaybackPage() {
     )
 
     // In shadowing mode, use explicit index tracking
-    const shadowingCaption = sortedCaptions[currentShadowingIndex]
+    const currentSentence = sortedSentences[currentShadowingIndex]
 
     // In lookup mode, use time-based caption
     const currentCaption = currentCaptionIndex === null
@@ -93,11 +103,17 @@ function VideoPlaybackPage() {
         videoPlayerRef.current?.seekTo(caption.start_time)
     }
 
+    function seekToSentence(index: number) {
+        const sentence = sortedSentences[index]
+        if (!sentence) return
+        videoPlayerRef.current?.seekTo(sentence.start_time)
+    }
+
     function handlePlayPause() {
-        const caption = sortedCaptions[currentShadowingIndex]
-        // If we're at or past the end of current caption, seek to start before playing
-        if (caption && currentTime >= caption.end_time ) {
-            videoPlayerRef.current?.seekTo(caption.start_time)
+        const sentence = sortedSentences[currentShadowingIndex]
+        // If we're at or past the end of current sentence, seek to start before playing
+        if (sentence && currentTime >= sentence.end_time ) {
+            videoPlayerRef.current?.seekTo(sentence.start_time)
             videoPlayerRef.current?.play()
         } else {
             videoPlayerRef.current?.togglePlay()
@@ -108,33 +124,33 @@ function VideoPlaybackPage() {
         const prevIndex = Math.max(0, currentShadowingIndex - 1)
         setFeedbackResult(null)
         setCurrentShadowingIndex(prevIndex)
-        seekToCaption(prevIndex)
+        seekToSentence(prevIndex)
     }
 
     function handleNextSentence() {
-        const nextIndex = Math.min(sortedCaptions.length - 1, currentShadowingIndex + 1)
+        const nextIndex = Math.min(sortedSentences.length - 1, currentShadowingIndex + 1)
         setFeedbackResult(null)
         setCurrentShadowingIndex(nextIndex)
-        seekToCaption(nextIndex)
+        seekToSentence(nextIndex)
     }
 
     // Initialize shadowing mode: start at index 0 and seek
     useEffect(() => {
-        if (mode === "shadowing" && sortedCaptions.length > 0) {
+        if (mode === "shadowing" && sortedSentences.length > 0) {
             setCurrentShadowingIndex(0)
             setPausedAtIndex(null)
-            seekToCaption(0)
+            seekToSentence(0)
         }
     }, [mode])
 
-    // Auto-pause at end of current caption in shadowing mode
+    // Auto-pause at end of current sentence in shadowing mode
     useEffect(() => {
     if (mode !== "shadowing") return
-    const caption = sortedCaptions[currentShadowingIndex]
-    if (!caption) return
+    const sentence = sortedSentences[currentShadowingIndex]
+    if (!sentence) return
 
-    // Playhead is back inside this caption → the seek landed, re-arm the guard.
-    if (currentTime < caption.end_time) {
+    // Playhead is back inside this sentence → the seek landed, re-arm the guard.
+    if (currentTime < sentence.end_time) {
         if (pausedAtIndex === currentShadowingIndex) setPausedAtIndex(null)
         return
     }
@@ -143,12 +159,12 @@ function VideoPlaybackPage() {
     if (
         isVideoPlaying &&
         pausedAtIndex !== currentShadowingIndex &&
-        currentTime >= caption.end_time 
+        currentTime >= sentence.end_time
     ) {
         videoPlayerRef.current?.pause()
         setPausedAtIndex(currentShadowingIndex)
     }
-}, [currentTime, currentShadowingIndex, sortedCaptions, mode, isVideoPlaying, pausedAtIndex])
+}, [currentTime, currentShadowingIndex, sortedSentences, mode, isVideoPlaying, pausedAtIndex])
     useEffect(() => {
         if (!videoId) {
             alert("No video Id.")//implement Error component
@@ -172,6 +188,11 @@ function VideoPlaybackPage() {
             setCaptions(response.data)
         }
         )
+        sentenceApi.get(videoId).then(response => {
+            console.log(response.data)
+            setSentences(response.data)
+        }
+        )
 
     }, [videoId])
 
@@ -181,7 +202,7 @@ function VideoPlaybackPage() {
         setIsLookupLoading(true)
         setIsLookupOpen(true)
 
-        vocabApi.getVocabAndContextSentence(selectedToken, videoId, clickedTimestamp)
+        vocabApi.getVocabAndContextSentence(selectedToken, videoId, selectedCaption.id,selectedCaption?.text)
             .then(response => {
                 console.log(response.data)
                 setLookupResult(response.data)
@@ -190,7 +211,18 @@ function VideoPlaybackPage() {
             setIsLookupLoading(false)
         })
 
-    },[selectedToken,clickedTimestamp,videoId])
+    }, [selectedToken, clickedTimestamp, videoId,selectedCaption])
+    
+    useEffect(() => {
+        shadowingApi.getShadowingStatus(videoId).then(res => {
+            setIsShadowingReady(res.data.is_shadowing_ready)
+        })
+sentenceApi.get(videoId).then(response => {
+            console.log(response.data)
+            setSentences(response.data)
+}
+)
+    },[mode,videoId])
     
     if (isLoading) {
         return <>
@@ -241,10 +273,10 @@ function VideoPlaybackPage() {
                             disableOverlayClick={mode === "shadowing"}
                         />
                     </div>
-                    {mode === "shadowing" && (
+                    {mode === "shadowing" && ( isShadowingReady ?
                         <>
                         <ShadowingControls
-                            currentCaption={shadowingCaption}
+                            currentSentence={currentSentence}
                             isPlaying={isVideoPlaying}
                             onPlayPause={handlePlayPause}
                             onPreviousSentence={handlePreviousSentence}
@@ -258,9 +290,9 @@ function VideoPlaybackPage() {
                     console.log(`[noise] ${meta.noiseDb?.toFixed(1)} dBFS — noisy=${meta.noisy}`)
                     const form = new FormData()
                     form.append("file", audio, "take.webm")
-                    form.append("caption", getCaptionText(shadowingCaption))
-                    form.append("start_time", (shadowingCaption.start_time).toString())
-                    form.append("end_time",(shadowingCaption.end_time).toString())
+                    form.append("caption", currentSentence.text)
+                    form.append("start_time", (currentSentence.start_time).toString())
+                    form.append("end_time",(currentSentence.end_time).toString())
                     form.append("video_id", String(videoMetaData?.youtube_video_id))
                     // return mockFeedbackMid
                     const res = await shadowingApi.sendAudioForScore(form)   // your endpoint
@@ -280,7 +312,9 @@ function VideoPlaybackPage() {
                 }}
             />
                             </div>
-                            </>
+                        </>
+                        :
+ <ShadowingProcessing videoId={videoId} onReady={() => setIsShadowingReady(true)} />
 
                     )}
                     {mode === "lookup" && (
@@ -288,10 +322,11 @@ function VideoPlaybackPage() {
                             <CaptionBar
                                 captions={captions}
                                 currentTime={currentTime}
-                                onWordClick={(token, timestamp) => {
+                                onWordClick={(token, caption) => {
                                     setIsLookupOpen(true)
                                     setSelectedToken(token)    
-                                    setClickTimestamp(timestamp)
+                                    setSelectedCaption(caption)
+                                    console.log("Selected Caption:",caption)
                                 }}
                             />
                         </div>
@@ -314,7 +349,8 @@ function VideoPlaybackPage() {
                             <LookupPanel
                                     result={lookupResult}
                                     isLoading={isLookupLoading}
-                                    video_id={videoId}
+                                            video_id={videoId}
+                                            selectedCaption={selectedCaption}
                                     onExplain={() => { /* implement next */ }}
                                         onClose={() => setIsLookupOpen(false) }
                                 />

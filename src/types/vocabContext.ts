@@ -13,11 +13,11 @@ export interface ContextResponse {
 
 export interface ContextRequest {
   vocab_id: number;
-  sentence_id: number;
+  caption_id: number;
   surface_form: string;
   pos: string[];
   meanings: string[];
-  context_sentence: string;
+  context_caption: string;
 }
 
 export interface ContextualExplanationProps {
@@ -28,6 +28,6 @@ export interface ContextualExplanationProps {
 export interface SaveVocab {
   vocab_id: number;
   video_id: number;
-  sentence_id: number;
+  caption_id: number;
   timestamp: number;
 }
