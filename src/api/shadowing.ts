@@ -13,4 +13,8 @@ export const shadowingApi = {
   sendScoreForFeedback: async (data: ScoreExplanationRequest) => {
     return apiClient.post("/shadowing/explain", data);
   },
+
+  getShadowingStatus: async (videoId: number) => {
+    return apiClient.get(`/video/${videoId}/shadowing-status`);
+  },
 };
