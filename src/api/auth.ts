@@ -39,3 +39,21 @@ export const getCurrentUser = async () => {
     });
     return response.data;
 }
+
+export const updateProfile = async (user: Partial<UserCreateRequest>) => {
+    const response = await apiClient.post("/auth/update-profile", user, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+    });
+    return response.data;
+}
+
+export const resetPassword = async (oldPassword: string, newPassword: string) => {
+    const response = await apiClient.post("/auth/reset-password", { "current_password": oldPassword, "new_password": newPassword }, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+    });
+    return response.data;
+}

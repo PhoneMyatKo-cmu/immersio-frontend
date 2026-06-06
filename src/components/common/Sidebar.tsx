@@ -1,5 +1,5 @@
 // components/Sidebar/Sidebar.tsx
-import { BookOpen, ChevronRight, Home, LogIn, RefreshCw, User } from 'lucide-react';
+import { BookOpen, ChevronRight, Home, LogIn, RefreshCw, UserIcon } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 interface SidebarItem {
@@ -12,7 +12,7 @@ interface SidebarItem {
 const isLoggedIn = !!localStorage.getItem('accessToken');
 
 const navItems: SidebarItem[] = [
-    { icon: isLoggedIn ? <User size={20} /> : <LogIn size={20} />,
+    { icon: isLoggedIn ? <UserIcon size={20} /> : <LogIn size={20} />,
         label: isLoggedIn ? 'Profile' : 'Login',
         to: isLoggedIn ? '/profile' : '/login'
     },
