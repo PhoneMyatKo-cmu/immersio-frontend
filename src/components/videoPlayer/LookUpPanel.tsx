@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useVocabSave } from "../../hooks/useVocabSave"
 import PronunciationButton from "../common/PronunciationButton"
+import type { Caption } from "./CaptionBar"
 import ContextualExplanation from "./ContextualExplanation"
 
 // interface Token {
@@ -38,7 +39,8 @@ export interface LookupResult {
 
 interface LookupPanelProps {
     result: LookupResult | null
-    video_id:number
+    video_id: number
+    selectedCaption:Caption | null
     isLoading:       boolean
     onExplain:       () => void
     onClose:         () => void
@@ -121,6 +123,7 @@ export default function LookupPanel({
     result,
     isLoading,
     video_id,
+    selectedCaption
 }: LookupPanelProps) {
 
     const [showAllMeanings, setShowAllMeanings] = useState(false)
@@ -149,8 +152,8 @@ export default function LookupPanel({
         onSave({
             vocab_id: result?.vocab_id,
             video_id: video_id,
-            sentence_id: result?.context_sentence.id,
-            timestamp:result?.context_sentence.start
+            caption_id: result?.context_sentence.id,
+            timestamp:selectedCaption.start_time
             
         })
     })
@@ -361,11 +364,11 @@ export default function LookupPanel({
                                     surfaceForm={result.surface_form}
                                     request={{
                                         vocab_id:         result.vocab_id ?? 0,
-                                        sentence_id:      result.context_sentence.id ?? 0,
+                                        caption_id:      result.context_sentence.id ?? 0,
                                         surface_form:     result.surface_form,
                                         pos:              result.meanings.flatMap(s => s.pos),
                                         meanings:         result.meanings.flatMap(s => s.meanings),
-                                        context_sentence: result.context_sentence.text ?? "",
+                                        context_caption: result.context_sentence.text ?? "",
                                     }}
                                 />
                             )}

@@ -10,7 +10,8 @@ interface Token {
 }
 
 export interface Caption {
-    fragment_index: number
+    id:number
+    index: number
     text:           string
     start_time:     number
     end_time:       number
@@ -20,7 +21,7 @@ export interface Caption {
 interface CaptionBarProps {
     captions:    Caption[]
     currentTime: number
-    onWordClick: (token: Token, timestamp: number, sentenceId?: number) => void
+    onWordClick: (token: Token,  caption: Caption | null) => void
 }
 
 // JLPT tier colours for subtle word highlighting
@@ -60,7 +61,9 @@ function CaptionLine({
 }: {
     caption:     Caption
     position:    number
-    onWordClick: (token: Token, timestamp: number) => void
+        onWordClick: (token: Token, caption: Caption | null
+        
+    ) => void
     currentTime: number
 }) {
     const isCurrent  = position === 0
@@ -112,7 +115,7 @@ function CaptionLine({
                     <span
                         key={i}
                         onClick={isCurrent
-                            ? () => onWordClick(token, caption.start_time)
+                            ? () => onWordClick(token, caption)
                             : undefined
                         }
                         className={`
@@ -228,7 +231,7 @@ export default function CaptionBar({
                     if (Math.abs(position) > 5) {
                         return (
                             <div
-                                key={caption.fragment_index}
+                                key={caption.index}
                                 ref={(el) => { lineRefs.current[i] = el }}
                                 style={{ height: "40px" }}
                             />
@@ -237,7 +240,7 @@ export default function CaptionBar({
 
                     return (
                         <div
-                            key={caption.fragment_index}
+                            key={caption.index}
                             ref={(el) => { lineRefs.current[i] = el }}
                         >
                             <CaptionLine

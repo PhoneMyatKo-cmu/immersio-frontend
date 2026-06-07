@@ -26,3 +26,4 @@ dist-ssr
 # custom
 test.ts
 /.env
+src/components/videoPlayer/shadowingMockResults.ts
