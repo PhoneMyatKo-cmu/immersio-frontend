@@ -1,4 +1,4 @@
-import { AudioLines, Mic, X } from "lucide-react"
+import { Mic, X } from "lucide-react"
 import PitchContour from "./PitchContour"
 import ScoreExplanation from "./ScoreExplanation"
 
@@ -15,10 +15,10 @@ export interface ShadowingFeedback {
     /** URL or data-URI of the server-rendered prosody plot (pitch / energy curve). */
     /** Free-text coaching from the LLM. */
     /** Optional short bullet tips, rendered as a list if present. */
-    /** What the learner was asked to say. */
-    user_katakana: string
-    /** What ASR heard them say. */
-    caption_katakana: string
+    /** What the learner was asked to say. [original, katakana] pairs */
+    user_katakana: [string, string][]
+    /** What ASR heard them say. [original, katakana] pairs */
+    caption_katakana: [string, string][]
 
     pitch_comparison_figure: unknown
     
@@ -175,7 +175,7 @@ export default function ShadowingFeedbackPanel({
 
                         
 
-                        {/* Prosody plot */}
+                        {/* Prosody plot
                         {result.pitch_comparison_figure && (
                             <div>
                                 <div className="mb-2 flex items-center gap-1.5 text-xs text-white/50">
@@ -188,18 +188,18 @@ export default function ShadowingFeedbackPanel({
                                     className="w-full rounded-lg border border-white/10 bg-black"
                                 />
                             </div>
-                        )}
+                        )} */}
 
                         {/* AI feedback */}
                         <ScoreExplanation request={
                             {
                                  cer: result.cer,
             pitch_score: result.pitch_score.score,
-            caption_katakana: result.caption_katakana,
-                                user_katakana: result.user_katakana,
+            caption_katakana: result.caption_katakana.map(([, k]) => k).join(""),
+                                user_katakana: result.user_katakana.map(([, k]) => k).join(""),
                                 user_pitch: result.user_pitch,
                                 reference_pitch: result.reference_pitch,
-                                caption:result.caption_katakana
+                                caption: result.caption_katakana.map(([, k]) => k).join("")
                             }
                         }
                             
