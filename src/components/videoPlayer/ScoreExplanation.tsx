@@ -50,7 +50,7 @@ async function getScoreFeedback(request: ScoreExplanationRequest) {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
     return (
-        <p className="text-[10px] font-semibold tracking-widest uppercase text-white/30 mb-2">
+        <p className="text-[12px] font-semibold tracking-widest uppercase text-white mb-2">
             {children}
         </p>
     )
@@ -67,14 +67,14 @@ function FeedbackList({
 }) {
     if (!items?.length) return null
     const dot =
-        tone === "good" ? "bg-teal" : tone === "improve" ? "bg-amber-400" : "bg-white/40"
+        tone === "good" ? "bg-teal-500" : tone === "improve" ? "bg-amber-400" : "bg-white/40"
     return (
         <div>
             <SectionLabel>{label}</SectionLabel>
             <ul className="space-y-1.5">
                 {items.map((item, i) => (
                     <li key={i} className="flex gap-2 text-sm text-white/75 leading-relaxed">
-                        <span className={`mt-1.5 h-1 w-1 flex-shrink-0 rounded-full ${dot}`} />
+                        <span className={`mt-1.5 h-1 w-1 shrink-0 rounded-full ${dot}`} />
                         {item}
                     </li>
                 ))}
@@ -191,6 +191,7 @@ export default function ScoreExplanation({ request }: ScoreExplanationProps) {
     } else if (data) {
         content = (
             <div className="border-t border-white/6 pt-4 space-y-4">
+                <h2 className="text-lg font-semibold">Score Explanation</h2>
                 {data.summary && (
                     <p className="text-sm text-white/75 leading-relaxed">{data.summary}</p>
                 )}

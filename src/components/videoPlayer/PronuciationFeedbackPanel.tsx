@@ -135,7 +135,7 @@ export default function ShadowingFeedbackPanel({
         <div className="flex h-full flex-col text-white">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-                <h2 className="text-base font-medium">Feedback</h2>
+                <h2 className="text-lg font-medium">Score & Feedback</h2>
                 {onClose && (
                     <button
                         type="button"
