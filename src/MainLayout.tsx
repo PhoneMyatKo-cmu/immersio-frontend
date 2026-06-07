@@ -5,7 +5,7 @@ export function MainLayout() {
     return (
         <div className="app-layout">
             <Sidebar />
-            <main style={{ marginLeft: '64px' }}>
+            <main  className='md:ml-16'>
                 <Outlet />
             </main>
         </div>
