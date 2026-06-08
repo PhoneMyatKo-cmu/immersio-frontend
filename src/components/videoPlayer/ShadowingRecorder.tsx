@@ -1,4 +1,4 @@
-import { AlertCircle, AlertTriangle, Loader2, Mic, Play, RotateCcw, Square } from "lucide-react"
+import { AlertCircle, AlertTriangle, Loader2, Mic, Pause, Play, RotateCcw, Square } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 type RecorderState =
@@ -59,7 +59,7 @@ export default function ShadowingRecorder({
     onScoringComplete,
     onError,
     disabled = false,
-    maxDurationMs = 15000,
+    maxDurationMs = 20000,
     noiseCheck = true,
     noiseThresholdDb = -30,
     noiseSampleMs = 600,
@@ -69,6 +69,7 @@ export default function ShadowingRecorder({
     const [levels, setLevels] = useState<number[]>(() => Array(NUM_BARS).fill(0))
     const [errorMsg, setErrorMsg] = useState<string | null>(null)
     const [noisy, setNoisy] = useState(false)
+    const [isReplaying, setIsReplaying] = useState(false)
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null)
     const streamRef = useRef<MediaStream | null>(null)
@@ -80,6 +81,7 @@ export default function ShadowingRecorder({
     const startedAtRef = useRef<number>(0)
     const recordedUrlRef = useRef<string | null>(null)
     const noiseDbRef = useRef<number | null>(null)
+    const playbackAudioRef = useRef<HTMLAudioElement | null>(null)
 
     // ── teardown helpers ──────────────────────────────────────────────────────
 
@@ -126,7 +128,12 @@ export default function ShadowingRecorder({
             URL.revokeObjectURL(recordedUrlRef.current)
             recordedUrlRef.current = null
         }
+        if (playbackAudioRef.current) {
+            playbackAudioRef.current.pause()
+            playbackAudioRef.current = null
+        }
         noiseDbRef.current = null
+        setIsReplaying(false)
         setState("idle")
         setElapsedMs(0)
         setLevels(Array(NUM_BARS).fill(0))
@@ -317,11 +324,40 @@ export default function ShadowingRecorder({
 
     // ── playback of the last take ───────────────────────────────────────────────
 
-    const playBack = useCallback(() => {
-        if (!recordedUrlRef.current) return
-        const audio = new Audio(recordedUrlRef.current)
-        audio.play().catch(() => {})
+    const stopPlayback = useCallback(() => {
+        if (playbackAudioRef.current) {
+            playbackAudioRef.current.pause()
+            playbackAudioRef.current.currentTime = 0
+            playbackAudioRef.current = null
+            setIsReplaying(false)
+        }
     }, [])
+
+    const playBack = useCallback(() => {
+        if (isReplaying) {
+            stopPlayback()
+            return
+        }
+        if (!recordedUrlRef.current) return
+
+        const audio = new Audio(recordedUrlRef.current)
+        playbackAudioRef.current = audio
+
+        audio.onplay = () => setIsReplaying(true)
+        audio.onended = () => {
+            setIsReplaying(false)
+            playbackAudioRef.current = null
+        }
+        audio.onerror = () => {
+            setIsReplaying(false)
+            playbackAudioRef.current = null
+        }
+
+        audio.play().catch(() => {
+            setIsReplaying(false)
+            playbackAudioRef.current = null
+        })
+    }, [isReplaying, stopPlayback])
 
     const fmt = (ms: number) => {
         const total = Math.floor(ms / 1000)
@@ -395,7 +431,7 @@ export default function ShadowingRecorder({
                         <button
                             type="button"
                             onClick={startRecording}
-                            disabled={disabled}
+                            disabled={disabled || isReplaying}
                             aria-label="Record again"
                             className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-white/10 bg-darkgrey px-5 text-sm font-medium text-white transition-colors hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
                         >
@@ -405,10 +441,13 @@ export default function ShadowingRecorder({
                         <button
                             type="button"
                             onClick={playBack}
-                            aria-label="Play your recording"
-                            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-darkgrey text-white/70 transition-colors hover:text-teal"
+                            aria-label={isReplaying ? "Stop playback" : "Play your recording"}
+                            className={isReplaying
+                                ? "inline-flex h-11 w-11 items-center justify-center rounded-full border border-teal bg-darkgrey text-white transition-colors"
+                                : "inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-darkgrey text-white/70 transition-colors hover:text-teal"
+                            }
                         >
-                            <Play className="h-4 w-4" />
+                            {isReplaying ? <Pause className="h-4 w-4 fill-current" /> : <Play className="h-4 w-4" />}
                         </button>
                     </div>
                 )}

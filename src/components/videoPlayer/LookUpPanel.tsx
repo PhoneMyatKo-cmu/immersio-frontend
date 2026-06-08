@@ -146,15 +146,15 @@ export default function LookupPanel({
     const navigate=useNavigate()
 
     const onSaveBtnClick = (() => {
-        if (!result) {
-            console.log("Result is null"); return
+        if (!result || !selectedCaption) {
+            console.log("Result or caption is null"); return
         }
         onSave({
-            vocab_id: result?.vocab_id,
+            vocab_id: result.vocab_id,
             video_id: video_id,
-            caption_id: result?.context_sentence.id,
-            timestamp:selectedCaption.start_time
-            
+            caption_id: result.context_sentence.id,
+            timestamp: selectedCaption.start_time
+
         })
     })
     
@@ -232,22 +232,25 @@ export default function LookupPanel({
                                     </span>
                                 )}
                                 {
-                                    isAuthenticated && 
+                                    isAuthenticated &&
                                        <button
                                     onClick={onSaveBtnClick}
+                                    onTouchEnd={(e) => { e.preventDefault(); onSaveBtnClick(); }}
                                     disabled={isSaved}
                                     className={`
                                         flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                                        min-h-[44px] min-w-[44px]
                                         text-xs font-medium transition-all duration-200
                                         ${isSaved
                                             ? "bg-teal/20 text-teal-500 cursor-default"
                                             : "bg-teal text-white hover:bg-teal/80 active:scale-95 cursor-pointer"
                                         }
                                     `}
+                                    style={{ touchAction: 'manipulation' }}
 
                                 >
                                     {isSaved ? "✓ Saved" : " + Save"}
-                                </button>  
+                                </button>
                                 }
 
                                  {

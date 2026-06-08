@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { youtubeUrlSubmissionApi } from "../api/youtubeUrlSubmission";
+import { useAuth } from "../authContext";
 import { Modal } from "../components/common/Modal";
 import Spinner from "../components/common/Spinner";
 
@@ -25,6 +26,8 @@ function SubmissionPage() {
         
     });
     const navigate = useNavigate()
+
+    const { isAuthenticated }=useAuth()
 
     function handleChange(e) {
         setFormData({
@@ -72,7 +75,21 @@ function SubmissionPage() {
             })
 
     }
-
+    
+    if (!isAuthenticated) {
+        return         <>
+            <Modal
+                isOpen={true}
+                onClose={() => {navigate("/")}}
+                message="Log in to use this feature!"
+                title="Log In?"
+                confirmText="Log In"
+                onConfirm={() => {
+                    navigate("/login")
+                }}
+            />
+        </>
+    }
     return <>
         
 

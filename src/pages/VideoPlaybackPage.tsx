@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
 import { captionApi } from "../api/caption"
 import { vocabApi } from "../api/vocab_context"
-import { getVideoMetaDataApi } from "../api/youtubeUrlSubmission"
 import BottomSheet from "../components/videoPlayer/BottomSheet"
 import type { Caption } from "../components/videoPlayer/CaptionBar"
 import CaptionBar from "../components/videoPlayer/CaptionBar"
@@ -17,6 +16,7 @@ import { useMediaQuery } from "../hooks/useMediaQuery"
 // temp
 import { shadowingApi } from "../api/shadowing"
 import { sentenceApi } from "../api/shadowingSentence"
+import { getVideoMetaDataApi } from "../api/video"
 import ShadowingProcessing from "../components/videoPlayer/ShadowingProcessing"
 import type { ShadowingSentence } from "../types/shadowing"
 
@@ -375,7 +375,8 @@ sentenceApi.get(videoId).then(response => {
                                 isLoading={isLookupLoading}
                                 video_id={videoId}
                                                 onExplain={() => { /* implement next */ }}
-                                                    onClose={() => setIsLookupOpen(false) }
+                                onClose={() => setIsLookupOpen(false)}
+                                selectedCaption={selectedCaption}
 
                                     />
                          </BottomSheet>

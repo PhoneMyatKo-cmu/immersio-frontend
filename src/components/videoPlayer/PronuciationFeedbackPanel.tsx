@@ -1,4 +1,5 @@
-import { AudioLines, Languages, Mic, X } from "lucide-react"
+import { Mic, X } from "lucide-react"
+import PitchContour from "./PitchContour"
 import ScoreExplanation from "./ScoreExplanation"
 
 /* ============================================================================
@@ -8,77 +9,53 @@ import ScoreExplanation from "./ScoreExplanation"
  * when the backend format is finalized.
  * ========================================================================== */
 export interface ShadowingFeedback {
-    /** Character-level match, 0–100 (higher is better). Derived from CER. */
-    matchScore?: number
-    /** Raw character error rate, 0–1 (lower is better). Shown as a hint. */
-    cer?: number
+    cer: number
     /** Prosodic similarity, 0–100 (higher is better). */
-    pitch_score: unknown
+    pitch_score: { score: number } & Record<string, unknown>
     /** URL or data-URI of the server-rendered prosody plot (pitch / energy curve). */
     /** Free-text coaching from the LLM. */
     /** Optional short bullet tips, rendered as a list if present. */
-    /** What the learner was asked to say. */
-    user_katakana: string
-    /** What ASR heard them say. */
-    caption_katakana: string
+    /** What the learner was asked to say. [original, katakana] pairs */
+    user_katakana: [string, string][]
+    /** What ASR heard them say. [original, katakana] pairs */
+    caption_katakana: [string, string][]
 
     pitch_comparison_figure: unknown
     
     user_pitch: []
     
-    reference_pitch:[]
+    reference_pitch: []
+    
+    caption_error:ScoredWord[]
 }
 
-/* ============================================================================
- *  ⬇⬇⬇   EDIT THIS ONE FUNCTION when the real API format lands.   ⬇⬇⬇
- *  It is the single boundary between the (currently unknown) backend shape
- *  and your UI. Right now it guesses common field names and tolerates
- *  missing data. When your friend finalizes the response, just fix the
- *  field names / scales here — the panel below stays untouched.
- * ========================================================================== */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function toShadowingFeedback(raw: any): ShadowingFeedback {
-    if (!raw || typeof raw !== "object") return {}
-
-    // CER: assumed to be a 0–1 error rate. If it arrives as a 0–100 percentage,
-    // scale it down. matchScore = how much matched = (1 - cer).
-    let cer: number | undefined =
-        raw.cer ?? raw.CER ?? raw.cer_score ?? raw.character_error_rate
-    if (typeof cer === "number" && cer > 1) cer = cer / 100
-    const matchScore =
-        typeof cer === "number" ? Math.round((1 - cer) * 100) : undefined
-
-    // Prosody: assumed 0–100. If it arrives as a 0–1 ratio, scale it up.
-    let prosody: number | undefined =
-        raw.prosody_score ?? raw.prosodyScore ?? raw.prosodic_similarity ?? raw.prosody
-    if (typeof prosody === "number" && prosody <= 1) prosody = prosody * 100
-    const prosodyScore =
-        typeof prosody === "number" ? Math.round(prosody) : undefined
-
-    return {
-        cer,
-        matchScore,
-        prosodyScore,
-        prosodyPlotUrl:
-            raw.prosody_plot_url ??
-            raw.prosodyPlotUrl ??
-            raw.plot_url ??
-            raw.prosody_plot ??
-            raw.plot,
-        feedback: raw.feedback ?? raw.ai_feedback ?? raw.feedback_text ?? raw.llm_feedback,
-        feedbackPoints: Array.isArray(raw.feedback_points) ? raw.feedback_points : undefined,
-        targetText: raw.target_text ?? raw.reference ?? raw.reference_text ?? raw.targetText,
-        recognizedText:
-            raw.recognized_text ?? raw.hypothesis ?? raw.transcript ?? raw.recognizedText,
-    }
-}
-
-/* ========================================================================== */
 
 export interface ShadowingFeedbackPanelProps {
     result: ShadowingFeedback | null
     isLoading: boolean
     onClose?: () => void
+}
+
+// Each entry is [word, isCorrect]; we flag the WRONG ones (isCorrect === false).
+type ScoredWord = [word: string, isCorrect: boolean]
+
+function ScoredSentence({ words }: { words: ScoredWord[] }) {
+    return (
+        <p className="font-japanese text-lg leading-relaxed">
+            {words.map(([word, isCorrect], i) => (
+                <span
+                    key={i}
+                    className={
+                        isCorrect
+                            ? "text-green-500"
+                            : "text-red-400  decoration-red-400/50 underline-offset-4"
+                    }
+                >
+                    {word}
+                </span>
+            ))}
+        </p>
+    )
 }
 
 function scoreColor(score: number): string {
@@ -190,33 +167,15 @@ export default function ShadowingFeedbackPanel({
                             <ScoreCard label="Pitch Accent Similarity" score={result.pitch_score.score} />
                         </div>
 
-                        {/* Transcript comparison */}
-                        {(result.user_katakana || result.caption_katakana) && (
-                            <div className="rounded-lg border border-white/10 bg-white/5 p-3">
-                                <div className="mb-2 flex items-center gap-1.5 text-xs text-white/50">
-                                    <Languages className="h-3.5 w-3.5" />
-                                    Transcript
-                                </div>
-                                {result.caption_katakana && (
-                                    <div className="mb-2">
-                                        <p className="text-[11px] text-white/30">Target</p>
-                                        <p className="text-sm leading-relaxed text-white/80">
-                                            {result.caption_katakana}
-                                        </p>
-                                    </div>
-                                )}
-                                {result.user_katakana && (
-                                    <div>
-                                        <p className="text-[11px] text-white/30">You said</p>
-                                        <p className="text-sm leading-relaxed text-white/80">
-                                            {result.user_katakana}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                      
 
-                        {/* Prosody plot */}
+                        <ScoredSentence words={result.caption_error} />
+                        <PitchContour userPitch={result.user_pitch} referencePitch={result.reference_pitch}/>
+
+
+                        
+
+                        {/* Prosody plot
                         {result.pitch_comparison_figure && (
                             <div>
                                 <div className="mb-2 flex items-center gap-1.5 text-xs text-white/50">
@@ -229,18 +188,18 @@ export default function ShadowingFeedbackPanel({
                                     className="w-full rounded-lg border border-white/10 bg-black"
                                 />
                             </div>
-                        )}
+                        )} */}
 
                         {/* AI feedback */}
                         <ScoreExplanation request={
                             {
                                  cer: result.cer,
             pitch_score: result.pitch_score.score,
-            caption_katakana: result.caption_katakana,
-                                user_katakana: result.user_katakana,
+            caption_katakana: result.caption_katakana.map(([, k]) => k).join(""),
+                                user_katakana: result.user_katakana.map(([, k]) => k).join(""),
                                 user_pitch: result.user_pitch,
                                 reference_pitch: result.reference_pitch,
-                                caption:result.caption_katakana
+                                caption: result.caption_katakana.map(([, k]) => k).join("")
                             }
                         }
                             
