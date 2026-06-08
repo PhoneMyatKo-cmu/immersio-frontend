@@ -63,6 +63,7 @@ function VideoPlaybackPage() {
     const [isLookupOpen, setIsLookupOpen] = useState(false)
     const [mode, setMode] = useState<PlaybackMode>("lookup")
     const [isVideoPlaying, setIsVideoPlaying] = useState(false)
+    const [playbackSpeed, setPlaybackSpeed] = useState(1)
     const [currentShadowingIndex, setCurrentShadowingIndex] = useState(0)
     const [pausedAtIndex, setPausedAtIndex] = useState<number | null>(null)
     const videoPlayerRef = useRef<VideoPlayerHandle | null>(null)
@@ -132,6 +133,11 @@ function VideoPlaybackPage() {
         setFeedbackResult(null)
         setCurrentShadowingIndex(nextIndex)
         seekToSentence(nextIndex)
+    }
+
+    function handlePlaybackSpeedChange(speed: number) {
+        setPlaybackSpeed(speed)
+        videoPlayerRef.current?.setPlaybackRate(speed)
     }
 
     // Initialize shadowing mode: start at index 0 and seek
@@ -283,6 +289,8 @@ sentenceApi.get(videoId).then(response => {
                             onNextSentence={handleNextSentence}
                             currentSentenceIndex={currentShadowingIndex}
                             totalSentences={sortedSentences.length}
+                            playbackSpeed={playbackSpeed}
+                            onPlaybackSpeedChange={handlePlaybackSpeedChange}
                         />
 <div className="mt-3 flex justify-center">
             <ShadowingRecorder

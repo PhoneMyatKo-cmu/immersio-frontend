@@ -18,6 +18,7 @@ export interface VideoPlayerHandle {
     seekTo: (seconds: number) => void
     getCurrentTime: () => number
     isPlaying: () => boolean
+    setPlaybackRate: (rate: number) => void
 }
 
 declare global {
@@ -207,6 +208,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
         seekTo,
         getCurrentTime: () => playerRef.current?.getCurrentTime() ?? currentTime,
         isPlaying: () => isPlaying,
+        setPlaybackRate: (rate: number) => playerRef.current?.setPlaybackRate(rate),
     }), [play, pause, togglePlay, seekTo, currentTime, isPlaying])
 
     // ── Progress bar interaction ───────────────────────────────────────────────
