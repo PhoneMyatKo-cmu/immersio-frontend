@@ -192,10 +192,12 @@ export default function LookupPanel({
                                     {result.surface_form}
                                 </h2>
 
-                                 <PronunciationButton
-                                    text={result.surface_form}
-                                    label={`Pronounce ${result.surface_form}`}
-                                 />
+                                 <div className="my-2">
+                                     <PronunciationButton
+                                        text={result.surface_form}
+                                        label={`Pronounce ${result.surface_form}`}
+                                     />
+                                 </div>
 
                                 {/* Reading + base form */}
                                 <div className="flex items-center gap-2 flex-wrap">
@@ -222,7 +224,7 @@ export default function LookupPanel({
                             </div>
 
                             {/* Right side — JLPT badge + Save */}
-                            <div className="flex flex-col items-end gap-2 shrink-0">
+                            <div className="flex flex-row items-center gap-2 shrink-0">
                                 {jlptStyle && result.jlpt_tier && (
                                     <span className={`
                                         text-xs font-bold px-2 py-0.5 rounded
