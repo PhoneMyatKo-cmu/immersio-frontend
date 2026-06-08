@@ -281,6 +281,8 @@ sentenceApi.get(videoId).then(response => {
                             onPlayPause={handlePlayPause}
                             onPreviousSentence={handlePreviousSentence}
                             onNextSentence={handleNextSentence}
+                            currentSentenceIndex={currentShadowingIndex}
+                            totalSentences={sortedSentences.length}
                         />
 <div className="mt-3 flex justify-center">
             <ShadowingRecorder

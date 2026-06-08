@@ -9,6 +9,8 @@ interface ShadowingControlsProps {
     onPlayPause: () => void
     onPreviousSentence: () => void
     onNextSentence: () => void
+    currentSentenceIndex: number
+    totalSentences: number
 }
 
 function getSentenceText(sentence: Caption | ShadowingSentence | null): string {
@@ -58,15 +60,22 @@ export default function ShadowingControls({
     onPlayPause,
     onPreviousSentence,
     onNextSentence,
+    currentSentenceIndex,
+    totalSentences,
 }: ShadowingControlsProps) {
     const hasSentence = Boolean(currentSentence)
 
     return (
         <div className="border-t border-white/5 bg-darkgrey px-4 py-4 text-white">
             <div className="mb-3">
-                <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-white/35">
-                    Shadowing sentence
-                </p>
+                <div className="flex items-center justify-between mb-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-white/35">
+                        Shadowing sentence
+                    </p>
+                    <p className="text-xs font-medium text-teal-400">
+                        {currentSentenceIndex + 1}/{totalSentences}
+                    </p>
+                </div>
                 <p className="min-h-12 rounded-md border border-white/8 bg-white/4 px-3 py-2 text-lg text-teal-500 text-center leading-relaxed tracking-widest ">
                     {getSentenceText(currentSentence) || "Waiting for the current sentence..."}
                 </p>
