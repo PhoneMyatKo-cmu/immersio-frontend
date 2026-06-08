@@ -14,6 +14,7 @@ interface ModalProps {
     onConfirm?: () => void;
     closeOnBackdrop?: boolean;
     cancelRequired?: boolean;
+    closeOnConfirm?: boolean;
 }
 
 const variantStyles: Record<ModalVariant, string> = {
@@ -32,7 +33,8 @@ export function Modal({
     confirmText = 'OK',
     onConfirm,
     closeOnBackdrop = true,
-    cancelRequired=false
+    cancelRequired=false,
+    closeOnConfirm = true
 }: ModalProps) {
     // Close on Escape key
     useEffect(() => {
@@ -66,7 +68,7 @@ export function Modal({
     
     const handleConfirm = () => {
         if (onConfirm) onConfirm();
-        onClose();
+        if (closeOnConfirm) onClose();
     };
 
     const handleCancel = () => {

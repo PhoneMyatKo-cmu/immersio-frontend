@@ -80,13 +80,14 @@ function SubmissionPage() {
         return         <>
             <Modal
                 isOpen={true}
-                onClose={() => {navigate("/")}}
+                onClose={() => navigate("/")}
                 message="Log in to use this feature!"
                 title="Log In?"
                 confirmText="Log In"
                 onConfirm={() => {
                     navigate("/login")
                 }}
+                closeOnConfirm={false}
             />
         </>
     }
