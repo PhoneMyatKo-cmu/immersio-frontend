@@ -19,6 +19,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function ExampleCard({
     example,
     surfaceForm,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     index,
 }: {
     example:     ExampleSentence
@@ -37,7 +38,7 @@ function ExampleCard({
                         <span key={i}>
                             {part}
                             {i < parts.length - 1 && (
-                                <span className="text-teal font-medium">
+                                <span className="text-teal-500 font-medium">
                                     {surfaceForm}
                                 </span>
                             )}
