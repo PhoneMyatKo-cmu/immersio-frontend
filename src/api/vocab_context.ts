@@ -8,7 +8,7 @@ export const vocabApi = {
     captionId: number,
     captionText: string,
   ) =>
-    apiClient.post("/get-vocab", {
+    apiClient.post("/vocab", {
       vocab_surface_form: token.surface,
       video_id: videoId,
       caption: {
@@ -21,7 +21,7 @@ export const vocabApi = {
     apiClient.post("/context-explanation", contextRequest),
 
   checkSavedVocab: (vocabId: number) =>
-    apiClient.get("/get-vocab/check-duplicate", {
+    apiClient.get("/vocab/check-duplicate", {
       params: {
         vocab_id: vocabId,
       },
@@ -29,6 +29,6 @@ export const vocabApi = {
 
   saveVocabForUser: (saveVocab: SaveVocab) => {
     console.log(saveVocab);
-    return apiClient.post("/get-vocab/save", saveVocab);
+    return apiClient.post("/vocab/save", saveVocab);
   },
 };
