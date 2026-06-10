@@ -31,7 +31,7 @@ export interface LookupResult {
     vocab_id:number
     surface_form:    string
     pronunciation:         string
-    jlpt_tier:       string | null
+    estimated_level:       string | null
     meanings:          Sense[]
     context_sentence: ContextSentence
     sentence_translation:string
@@ -51,7 +51,8 @@ const JLPT_STYLES: Record<string, { bg: string; text: string }> = {
     N4: { bg: "bg-blue-900/40",   text: "text-blue-400"   },
     N3: { bg: "bg-yellow-900/40", text: "text-yellow-400" },
     N2: { bg: "bg-orange-900/40", text: "text-orange-400" },
-    N1: { bg: "bg-red-900/40",    text: "text-red-400"    },
+    N1: { bg: "bg-red-900/40", text: "text-red-400" },
+    UNKNOWN: {bg:"bg-white-900/40", text:"text-white"} 
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -129,8 +130,8 @@ export default function LookupPanel({
     const [showAllMeanings, setShowAllMeanings] = useState(false)
     const { isSaved, isAuthenticated,onSave } = useVocabSave(result?.vocab_id ?? null)
 
-    const jlptStyle = result?.jlpt_tier
-        ? JLPT_STYLES[result.jlpt_tier]
+    const jlptStyle = result?.estimated_level
+        ? JLPT_STYLES[result.estimated_level]
         : null
 
     // Flatten all meanings across senses for display
@@ -185,93 +186,88 @@ export default function LookupPanel({
                     <div className="p-5">
 
                         {/* ── Word header ── */}
-                        <div className="flex items-start justify-between gap-3 mb-4">
-                            <div className="min-w-0">
-                                {/* Surface form — large */}
-                                <h2 className="text-3xl font-japanese font-medium text-white leading-none mb-1.5">
-                                    {result.surface_form}
-                                </h2>
+                       <div className="flex items-start justify-between gap-3 mb-4">
+    <div className="min-w-0">
+        {/* Word + inline pronunciation */}
+        <div className="flex items-center gap-2 mb-1.5">
+            <h2 className="text-3xl font-japanese font-medium text-white leading-none">
+                {result.surface_form}
+            </h2>
+            <PronunciationButton
+                text={result.surface_form}
+                label={`Pronounce ${result.surface_form}`}
+            />
+        </div>
 
-                                 <div className="my-2">
-                                     <PronunciationButton
-                                        text={result.surface_form}
-                                        label={`Pronounce ${result.surface_form}`}
-                                     />
-                                 </div>
+        {/* Metadata strip: reading · POS · JLPT */}
+        <div className="flex items-center gap-2 flex-wrap text-sm">
+            <span className="text-white/70 font-japanese">
+                {result.pronunciation}
+            </span>
 
-                                {/* Reading + base form */}
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-lg text-white/80 font-japanese">
-                                        {result.pronunciation}
-                                    </span>
-                                    {/* {result.base_form !== result.surface_form && (
-                                        <>
-                                            <span className="text-white/20">·</span>
-                                            <span className="text-xs text-white/40 font-japanese">
-                                                {result.base_form}
-                                            </span>
-                                        </>
-                                    )} */}
-                                    {primaryPos && (
-                                        <>
-                                            <span className="text-white/20">·</span>
-                                            <span className="text-xs text-white/40 italic">
-                                                {primaryPos}    
-                                            </span>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
+            {primaryPos && (
+                <>
+                    <span className="text-white/30">·</span>
+                    <span className="text-white/60 italic">
+                        {primaryPos}
+                    </span>
+                </>
+            )}
 
-                            {/* Right side — JLPT badge + Save */}
-                            <div className="flex flex-row items-center gap-2 shrink-0">
-                                {jlptStyle && result.jlpt_tier && (
-                                    <span className={`
-                                        text-xs font-bold px-2 py-0.5 rounded
-                                        ${jlptStyle.bg} ${jlptStyle.text}
-                                    `}>
-                                        {result.jlpt_tier}
-                                    </span>
-                                )}
-                                {
-                                    isAuthenticated &&
-                                       <button
-                                    onClick={onSaveBtnClick}
-                                    onTouchEnd={(e) => { e.preventDefault(); onSaveBtnClick(); }}
-                                    disabled={isSaved}
-                                    className={`
-                                        flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-                                        min-h-[44px] min-w-[44px]
-                                        text-xs font-medium transition-all duration-200
-                                        ${isSaved
-                                            ? "bg-teal/20 text-teal-500 cursor-default"
-                                            : "bg-teal text-white hover:bg-teal/80 active:scale-95 cursor-pointer"
-                                        }
-                                    `}
-                                    style={{ touchAction: 'manipulation' }}
+            {jlptStyle && result.estimated_level && (
+                <>
+                    <span className="text-white/30">·</span>
+                    <span
+                        title="Estimated JLPT level"
+                        className={`
+                            text-xs font-bold px-2 py-0.5 rounded
+                            ${jlptStyle.bg} ${jlptStyle.text}
+                        `}
+                    >
+                        ~{result.estimated_level}
+                    </span>
+                </>
+            )}
+        </div>
+    </div>
 
-                                >
-                                    {isSaved ? "✓ Saved" : " + Save"}
-                                </button>
-                                }
+    {/* Action corner — save only */}
+    <div className="shrink-0">
+        {isAuthenticated && (
+            <button
+                onClick={onSaveBtnClick}
+                disabled={isSaved}
+                style={{ touchAction: "manipulation" }}
+                className={`
+                    flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg
+                    min-h-[44px] min-w-[44px]
+                    text-xs font-medium transition-all duration-200
+                    ${isSaved
+                        ? "bg-teal/20 text-teal-500 cursor-default"
+                        : "bg-teal text-white hover:bg-teal/80 active:scale-95 cursor-pointer"
+                    }
+                `}
+            >
+                {isSaved ? "✓ Saved" : "+ Save"}
+            </button>
+        )}
 
-                                 {
-                                    !isAuthenticated && 
-                                       <button
-                                    onClick={onLogInClick}
-                                    className={`
-                                        flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-                                        text-xs font-medium transition-all duration-200
-                                        text-teal-500 cursor-pointer
-
-                                                                        `}
-
-                                >
-                                    Log In to Save
-                                </button>  
-                                }                              
-                            </div>
-                        </div>
+        {!isAuthenticated && (
+            <button
+                onClick={onLogInClick}
+                style={{ touchAction: "manipulation" }}
+                className="
+                    flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg
+                    min-h-[44px]
+                    text-xs font-medium text-teal-500 cursor-pointer
+                    transition-all duration-200 hover:text-teal-400
+                "
+            >
+                Log in to save
+            </button>
+        )}
+    </div>
+</div>
 
                         <Divider />
 
