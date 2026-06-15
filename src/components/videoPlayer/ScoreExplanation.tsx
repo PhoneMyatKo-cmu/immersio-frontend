@@ -209,8 +209,8 @@ export default function ScoreExplanation({ request }: ScoreExplanationProps) {
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                message="Log in to use this feature!"
-                title="Log In?"
+                title="Log in required!"
+                message="Please log in to access this feature."
                 confirmText="Log In"
                 onConfirm={() => {
                     navigate("/login")
