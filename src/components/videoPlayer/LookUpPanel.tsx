@@ -59,7 +59,7 @@ const JLPT_STYLES: Record<string, { bg: string; text: string }> = {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
     return (
-        <p className="text-[10px] font-semibold tracking-widest uppercase text-white/30 mb-1.5">
+        <p className="text-sm font-semibold tracking-widest uppercase text-white/50 mb-1.5">
             {children}
         </p>
     )
@@ -281,7 +281,7 @@ export default function LookupPanel({
                                     {result.meanings.map((sense, si) => (
                                         <div key={si}>
                                             {sense.pos.length > 0 && (
-                                                <p className="text-[10px] text-white/30 italic mb-1">
+                                                <p className="text-[15px] text-white/40 italic mb-1">
                                                     {sense.pos}
                                                 </p>
                                             )}
@@ -324,7 +324,7 @@ export default function LookupPanel({
                             {allMeanings.length > 3 && (
                                 <button
                                     onClick={() => setShowAllMeanings(v => !v)}
-                                    className="mt-2 text-xs text-white/30 hover:text-white/60 transition-colors"
+                                    className="mt-2 text-[15px] text-white/60  hover:text-white/60 hover:cursor-pointer transition-colors"
                                 >
                                     {showAllMeanings
                                         ? "Show less"
@@ -348,7 +348,7 @@ export default function LookupPanel({
 
                                         {/* Translation */}
                                         {tempTranslation && (
-                                            <p className="text-xs text-white/45 leading-relaxed border-t border-white/6 pt-2 mt-1">
+                                            <p className="text-sm text-white/60 leading-relaxed border-t border-white/6 pt-2 mt-1">
                                                 {tempTranslation}
                                             </p>
                                         )}
