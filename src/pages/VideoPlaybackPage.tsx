@@ -336,6 +336,7 @@ sentenceApi.get(videoId).then(response => {
                                     setIsLookupOpen(true)
                                     setSelectedToken(token)    
                                     setSelectedCaption(caption)
+                                     videoPlayerRef.current?.pause()
                                     console.log("Selected Caption:",caption)
                                 }}
                             />
