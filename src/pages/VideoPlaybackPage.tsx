@@ -72,7 +72,9 @@ function VideoPlaybackPage() {
     const [feedbackLoading, setFeedbackLoading] = useState<boolean>(false)
     const [sentences, setSentences] = useState<ShadowingSentence[]>([])
     const [isShadowingReady, setIsShadowingReady] = useState<boolean>(false)
-    const [selectedCaption,setSelectedCaption]=useState<Caption | null>(null)
+    const [selectedCaption, setSelectedCaption] = useState<Caption | null>(null)
+    const [isNoVideoError,setIsNoVideoError]=useState<boolean>(false)
+    
 
 
     const sortedCaptions = useMemo(
@@ -181,8 +183,10 @@ function VideoPlaybackPage() {
             console.log(response.data)
             
             setVideoMetaData(response.data)
+            setIsNoVideoError(false)
         }).catch(e => {
             // implement Error componenet
+            setIsNoVideoError(true)
             console.log(e)
         }).finally(() => {
             console.log("Done")
@@ -236,6 +240,13 @@ sentenceApi.get(videoId).then(response => {
         </>
     }
     else {
+        if(isNoVideoError){
+
+            return <>
+        <h2 className="text-2xl text-center text-white mt-[20%]">No Such Video!</h2>
+            </>
+        }
+        else {
 
         return <>
     
@@ -422,6 +433,7 @@ sentenceApi.get(videoId).then(response => {
 
    
         </>
+    }
     }
 }
 
