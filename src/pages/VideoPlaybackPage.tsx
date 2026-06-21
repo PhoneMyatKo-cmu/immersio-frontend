@@ -63,6 +63,7 @@ function VideoPlaybackPage() {
     const [isLookupOpen, setIsLookupOpen] = useState(false)
     const [mode, setMode] = useState<PlaybackMode>("lookup")
     const [isVideoPlaying, setIsVideoPlaying] = useState(false)
+    const [playbackSpeed, setPlaybackSpeed] = useState(1)
     const [currentShadowingIndex, setCurrentShadowingIndex] = useState(0)
     const [pausedAtIndex, setPausedAtIndex] = useState<number | null>(null)
     const videoPlayerRef = useRef<VideoPlayerHandle | null>(null)
@@ -71,7 +72,9 @@ function VideoPlaybackPage() {
     const [feedbackLoading, setFeedbackLoading] = useState<boolean>(false)
     const [sentences, setSentences] = useState<ShadowingSentence[]>([])
     const [isShadowingReady, setIsShadowingReady] = useState<boolean>(false)
-    const [selectedCaption,setSelectedCaption]=useState<Caption | null>(null)
+    const [selectedCaption, setSelectedCaption] = useState<Caption | null>(null)
+    const [isNoVideoError,setIsNoVideoError]=useState<boolean>(false)
+    
 
 
     const sortedCaptions = useMemo(
@@ -134,6 +137,11 @@ function VideoPlaybackPage() {
         seekToSentence(nextIndex)
     }
 
+    function handlePlaybackSpeedChange(speed: number) {
+        setPlaybackSpeed(speed)
+        videoPlayerRef.current?.setPlaybackRate(speed)
+    }
+
     // Initialize shadowing mode: start at index 0 and seek
     useEffect(() => {
         if (mode === "shadowing" && sortedSentences.length > 0) {
@@ -175,8 +183,10 @@ function VideoPlaybackPage() {
             console.log(response.data)
             
             setVideoMetaData(response.data)
+            setIsNoVideoError(false)
         }).catch(e => {
             // implement Error componenet
+            setIsNoVideoError(true)
             console.log(e)
         }).finally(() => {
             console.log("Done")
@@ -230,6 +240,13 @@ sentenceApi.get(videoId).then(response => {
         </>
     }
     else {
+        if(isNoVideoError){
+
+            return <>
+        <h2 className="text-2xl text-center text-white mt-[20%]">No Such Video!</h2>
+            </>
+        }
+        else {
 
         return <>
     
@@ -281,6 +298,10 @@ sentenceApi.get(videoId).then(response => {
                             onPlayPause={handlePlayPause}
                             onPreviousSentence={handlePreviousSentence}
                             onNextSentence={handleNextSentence}
+                            currentSentenceIndex={currentShadowingIndex}
+                            totalSentences={sortedSentences.length}
+                            playbackSpeed={playbackSpeed}
+                            onPlaybackSpeedChange={handlePlaybackSpeedChange}
                         />
 <div className="mt-3 flex justify-center">
             <ShadowingRecorder
@@ -326,6 +347,7 @@ sentenceApi.get(videoId).then(response => {
                                     setIsLookupOpen(true)
                                     setSelectedToken(token)    
                                     setSelectedCaption(caption)
+                                     videoPlayerRef.current?.pause()
                                     console.log("Selected Caption:",caption)
                                 }}
                             />
@@ -411,6 +433,7 @@ sentenceApi.get(videoId).then(response => {
 
    
         </>
+    }
     }
 }
 

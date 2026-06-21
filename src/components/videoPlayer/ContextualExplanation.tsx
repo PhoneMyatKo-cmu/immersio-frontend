@@ -19,6 +19,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function ExampleCard({
     example,
     surfaceForm,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     index,
 }: {
     example:     ExampleSentence
@@ -37,7 +38,7 @@ function ExampleCard({
                         <span key={i}>
                             {part}
                             {i < parts.length - 1 && (
-                                <span className="text-teal font-medium">
+                                <span className="text-teal-500 font-medium">
                                     {surfaceForm}
                                 </span>
                             )}
@@ -246,8 +247,8 @@ export default function ContextualExplanation({
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                message="Log in to use this feature!"
-                title="Log In?"
+                title="Log in required!"
+                message="Please log in to access this feature."
                 confirmText="Log In"
                 onConfirm={() => {
                     navigate("/login")

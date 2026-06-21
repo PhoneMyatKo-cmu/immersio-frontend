@@ -5,11 +5,11 @@ interface PitchContourProps {
     userPitch: number[]
 }
 
-const W = 700, H = 170, PAD = 14, SMOOTH = 3
+const W = 700, H = 170, PAD = 14, SMOOTH = 10
 
 // keep voiced frames, smooth, center on the speaker's own mean
 function clean(raw: number[]): { x: number; y: number }[] {
-    const voiced = raw.map((v, i) => ({ v, i })).filter(p => Number.isFinite(p.v) && p.v > 0)
+    const voiced = raw.map((v, i) => ({ v, i })).filter(p => Number.isFinite(p.v) && p.v >= 0)
     if (!voiced.length) return []
     const mean = voiced.reduce((s, p) => s + p.v, 0) / voiced.length
     const maxIdx = raw.length - 1 || 1

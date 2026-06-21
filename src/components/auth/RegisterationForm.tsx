@@ -52,10 +52,12 @@ export function RegisterationForm() {
             })
             .catch((error) => {
                 console.error('Registration failed:', error);
+                const status = error.response?.status;
                 const error_message = error.response?.data?.detail || 'An unexpected error occurred during registration. Please try again.';
+
                 setModalState({
                     isOpen: true,
-                    title: "Registration Failed",
+                    title: status === 422 ? 'Invalid Input' : 'Registration Failed',
                     message: error_message,
                     variant: 'error'
                 });

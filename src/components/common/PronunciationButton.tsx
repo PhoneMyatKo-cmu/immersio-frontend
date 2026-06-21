@@ -20,8 +20,8 @@ export default function PronunciationButton({
     if (!isSupported) return null
 
     const sizeClasses = size === "sm"
-        ? "w-6 h-6 text-xs"
-        : "w-7 h-7 text-sm"
+        ? "w-6 h-6 text-xs min-w-[44px] min-h-[44px]"
+        : "w-7 h-7 text-sm min-w-[44px] min-h-[44px]"
 
     return (
         <button

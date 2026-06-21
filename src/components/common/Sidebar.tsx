@@ -1,6 +1,7 @@
 // components/Sidebar/Sidebar.tsx
 import { Home, LogIn, Upload, User } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
+import { useAuth } from '../../authContext'
 
 interface SidebarItem {
     icon: React.ReactNode
@@ -9,14 +10,14 @@ interface SidebarItem {
 }
 
 function useNavItems(): SidebarItem[] {
-    const isLoggedIn = !!localStorage.getItem('accessToken')
+    const {isAuthenticated} = useAuth()
     return [
         { icon: <Home size={20} />, label: 'Home', to: '/' },
         { icon: <Upload size={20} />, label: 'Submit', to: '/submit' },
         {
-            icon: isLoggedIn ? <User size={20} /> : <LogIn size={20} />,
-            label: isLoggedIn ? 'Profile' : 'Login',
-            to: isLoggedIn ? '/profile' : '/login',
+            icon: isAuthenticated ? <User size={20} /> : <LogIn size={20} />,
+            label: isAuthenticated ? 'Profile' : 'Login',
+            to: isAuthenticated ? '/profile' : '/login',
         },
     ]
 }

@@ -9,6 +9,10 @@ interface ShadowingControlsProps {
     onPlayPause: () => void
     onPreviousSentence: () => void
     onNextSentence: () => void
+    currentSentenceIndex: number
+    totalSentences: number
+    playbackSpeed: number
+    onPlaybackSpeedChange: (speed: number) => void
 }
 
 function getSentenceText(sentence: Caption | ShadowingSentence | null): string {
@@ -52,24 +56,55 @@ function IconButton({
     )
 }
 
+const speeds = [0.75, 1, 1.25] as const
+
 export default function ShadowingControls({
     currentSentence,
     isPlaying,
     onPlayPause,
     onPreviousSentence,
     onNextSentence,
+    currentSentenceIndex,
+    totalSentences,
+    playbackSpeed,
+    onPlaybackSpeedChange,
 }: ShadowingControlsProps) {
     const hasSentence = Boolean(currentSentence)
 
     return (
         <div className="border-t border-white/5 bg-darkgrey px-4 py-4 text-white">
             <div className="mb-3">
-                <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-white/35">
-                    Shadowing sentence
-                </p>
+                <div className="flex items-center justify-between mb-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-white/35">
+                        Shadowing sentence
+                    </p>
+                    <p className="text-xs font-medium text-teal-400">
+                        {currentSentenceIndex + 1}/{totalSentences}
+                    </p>
+                </div>
                 <p className="min-h-12 rounded-md border border-white/8 bg-white/4 px-3 py-2 text-lg text-teal-500 text-center leading-relaxed tracking-widest ">
                     {getSentenceText(currentSentence) || "Waiting for the current sentence..."}
                 </p>
+            </div>
+
+            {/* Playback speed */}
+            <div className="flex items-center justify-center gap-1 mb-3">
+                {speeds.map((speed) => (
+                    <button
+                        key={speed}
+                        type="button"
+                        onClick={() => onPlaybackSpeedChange(speed)}
+                        className={`
+                            px-3 py-1 rounded text-xs font-medium transition-all
+                            ${playbackSpeed === speed
+                                ? 'bg-teal-500 text-white'
+                                : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/70'
+                            }
+                        `}
+                    >
+                        {speed}x
+                    </button>
+                ))}
             </div>
 
             <div className="flex items-center justify-center gap-2">
