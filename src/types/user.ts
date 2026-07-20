@@ -21,12 +21,15 @@ export class UserCreateRequest {
     }
 }
 
+export type Role = 'ADMIN' | 'LEARNER';
+
 export type User = {
     id: number;
     first_name: string;
     last_name: string;
     email: string;
     estimated_level: EstimatedLevel;
+    role?: Role;
     created_at: string;
 }
 
