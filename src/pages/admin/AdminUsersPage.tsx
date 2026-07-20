@@ -1,4 +1,4 @@
-import { ShieldCheck, ShieldOff, UserX } from "lucide-react";
+import { ShieldOff, UserX } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { adminUsersApi } from "../../api/adminUsers";
 import { StatCard } from "../../components/admin/StatCard";
@@ -61,10 +61,12 @@ function AdminUsersPage() {
         return () => clearTimeout(t);
     }, [searchInput]);
 
+    // Level is a learner-only lens: selecting a level scopes the query to
+    // LEARNER so admins (whose level is treated as N/A) can't leak in.
     const params = useMemo(
         () => ({
             search: search || undefined,
-            role: role || undefined,
+            role: level ? ("LEARNER" as Role) : role || undefined,
             estimated_level: level || undefined,
             is_active: isActive === "" ? undefined : isActive === "true",
             page,
@@ -139,9 +141,11 @@ function AdminUsersPage() {
                     className="w-full rounded-lg border border-white/10 bg-[#0a1628] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-500 sm:max-w-xs"
                 />
                 <select
-                    value={role}
+                    value={level ? "LEARNER" : role}
+                    disabled={level !== ""}
+                    title={level !== "" ? "Level filter applies to learners only" : undefined}
                     onChange={(e) => { setRole(e.target.value as Role | ""); setPage(1); }}
-                    className="rounded-lg border border-white/10 bg-[#0a1628] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="rounded-lg border border-white/10 bg-[#0a1628] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     <option value="">All roles</option>
                     <option value="ADMIN">Admin</option>
@@ -198,7 +202,9 @@ function AdminUsersPage() {
                                             </div>
                                             <div className="text-xs text-white/40">{u.email}</div>
                                         </td>
-                                        <td className="px-4 py-3 capitalize text-white/60">{u.estimated_level}</td>
+                                        <td className="px-4 py-3 capitalize text-white/60">
+                                            {u.role === "ADMIN" ? <span className="text-white/30">—</span> : u.estimated_level}
+                                        </td>
                                         <td className="px-4 py-3">
                                             <Badge tone={u.role === "ADMIN" ? "teal" : "slate"}>{u.role}</Badge>
                                         </td>
@@ -210,22 +216,13 @@ function AdminUsersPage() {
                                         <td className="px-4 py-3 text-white/50">{formatDate(u.last_login_at)}</td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center justify-end gap-1">
-                                                {u.role === "ADMIN" ? (
+                                                {u.role === "ADMIN" && !isSelf && (
                                                     <button
                                                         onClick={() => setPending({ type: "role", user: u, nextRole: "LEARNER" })}
-                                                        disabled={isSelf}
-                                                        title={isSelf ? "You can't change your own role" : "Demote to learner"}
-                                                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-white/60 transition-colors hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-30"
+                                                        title="Demote to learner"
+                                                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-white/60 transition-colors hover:bg-white/5"
                                                     >
                                                         <ShieldOff size={16} />
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => setPending({ type: "role", user: u, nextRole: "ADMIN" })}
-                                                        title="Promote to admin"
-                                                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-teal-400 transition-colors hover:bg-teal-500/10"
-                                                    >
-                                                        <ShieldCheck size={16} />
                                                     </button>
                                                 )}
                                                 <button
