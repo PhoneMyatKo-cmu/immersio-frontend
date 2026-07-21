@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from "lucide-react";
+import { ExternalLink, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { adminVideosApi } from "../../api/adminVideos";
 import { AddVideoModal } from "../../components/admin/AddVideoModal";
@@ -212,15 +212,26 @@ function AdminVideosPage() {
                                             : <Badge tone="red">Inactive</Badge>}
                                     </td>
                                     <td className="px-4 py-3 text-white/50">{formatDate(v.created_at)}</td>
-                                    <td className="px-4 py-3 text-right">
-                                        <button
-                                            onClick={() => setDeleteTarget(v)}
-                                            disabled={!v.is_active}
-                                            title={v.is_active ? "Remove video" : "Already removed"}
-                                            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-red-400 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-30"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center justify-end gap-1">
+                                            <a
+                                                href={`/video/${v.id}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                title="Preview as learner (new tab)"
+                                                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-white/60 transition-colors hover:bg-white/5 hover:text-white/90"
+                                            >
+                                                <ExternalLink size={16} />
+                                            </a>
+                                            <button
+                                                onClick={() => setDeleteTarget(v)}
+                                                disabled={!v.is_active}
+                                                title={v.is_active ? "Remove video" : "Already removed"}
+                                                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-red-400 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-30"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))
