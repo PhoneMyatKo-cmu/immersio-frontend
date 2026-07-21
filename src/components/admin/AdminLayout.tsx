@@ -27,7 +27,7 @@ export function AdminLayout() {
     return (
         <div className="min-h-screen bg-darkgrey text-white">
             <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0a1628]/95 backdrop-blur">
-                <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3">
+                <div className="mx-auto flex  items-center justify-between gap-4 px-8 py-3">
                     <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-600 text-lg font-bold">
                             I
@@ -75,7 +75,7 @@ export function AdminLayout() {
                 </div>
             </header>
 
-            <main className="mx-auto max-w-6xl px-6 py-8">
+            <main className="mx-auto px-8 w-full py-8">
                 <Outlet />
             </main>
         </div>
