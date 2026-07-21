@@ -165,9 +165,9 @@ function AdminVideosPage() {
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto rounded-xl border border-white/10">
+            <div className="overflow-x-auto rounded-xl border border-white/10 bg-[#111c30]">
                 <table className="w-full text-left text-sm">
-                    <thead className="bg-white/5 text-xs uppercase tracking-wide text-white/40">
+                    <thead className="border-b border-white/10 bg-white/[0.06] text-xs uppercase tracking-wide text-white/60">
                         <tr>
                             <th className="px-4 py-3 font-medium">Video</th>
                             <th className="px-4 py-3 font-medium">Source</th>
@@ -177,14 +177,14 @@ function AdminVideosPage() {
                             <th className="px-4 py-3 font-medium text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody className="divide-y divide-white/10">
                         {loading ? (
                             <tr><td colSpan={6} className="px-4 py-10 text-center text-white/40">Loading…</td></tr>
                         ) : !data || data.items.length === 0 ? (
                             <tr><td colSpan={6} className="px-4 py-10 text-center text-white/40">No videos found.</td></tr>
                         ) : (
                             data.items.map((v) => (
-                                <tr key={v.id} className="text-white/80">
+                                <tr key={v.id} className="text-white/90 transition-colors hover:bg-white/[0.03]">
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-3">
                                             <img src={v.thumbnail_url} alt="" className="h-10 w-16 flex-shrink-0 rounded object-cover" />
@@ -250,6 +250,7 @@ function AdminVideosPage() {
                 }
                 variant="warning"
                 confirmText="Remove"
+                confirmTone="danger"
                 cancelRequired
                 closeOnConfirm={false}
                 onConfirm={handleConfirmDelete}

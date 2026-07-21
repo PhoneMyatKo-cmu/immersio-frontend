@@ -26,14 +26,19 @@ export function AdminLayout() {
 
     return (
         <div className="min-h-screen bg-darkgrey text-white">
-            <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0a1628]/95 backdrop-blur">
+            {/* Admin chrome accent — a persistent cue that this is the back office, not the product */}
+            <div className="h-1 w-full bg-amber-500" />
+            <header className="sticky top-0 z-40 border-b border-amber-500/20 bg-[#0d1526]/95 backdrop-blur">
                 <div className="mx-auto flex  items-center justify-between gap-4 px-8 py-3">
                     <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-600 text-lg font-bold">
                             I
                         </div>
-                        <span className="text-sm font-semibold tracking-wide text-white/80">
+                        <span className="flex items-center gap-2 text-sm font-semibold tracking-wide text-white/80">
                             Admin
+                            <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                                Console
+                            </span>
                         </span>
                     </div>
 
