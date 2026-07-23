@@ -6,6 +6,7 @@ interface VideoPlayerProps {
     onReady?:      () => void
     onEnded?:      () => void
     onPlayingChange?: (isPlaying: boolean) => void
+    onSeek?: (from: number, to: number) => void
     showControls?: boolean
     enableOverlayClick?: boolean
     disableOverlayClick?: boolean
@@ -48,6 +49,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
     onReady,
     onEnded,
     onPlayingChange,
+    onSeek,
     showControls: shouldShowControls = true,
     enableOverlayClick = true,
     disableOverlayClick = false,
@@ -69,6 +71,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
     const [showControls, setShowControls] = useState(true)
     const controlsTimer  = useRef<ReturnType<typeof setTimeout> | null>(null)
     const wrapperRef     = useRef<HTMLDivElement>(null)
+    const [previewPct, setPreviewPct] = useState<number | null>(null)
 
     // ── Load API ──────────────────────────────────────────────────────────────
 
@@ -124,7 +127,10 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
                     onPlayingChange?.(playing)
                     if (playing) startTracking()
                     else         stopTracking()
-                    if (e.data === 0) onEnded?.()
+                    if (e.data === 0) {
+                        onTimeUpdate?.(duration)
+                        onEnded?.()
+                    }
                 },
             },
         })
@@ -197,9 +203,11 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
     }, [])
 
     const seekTo = useCallback((seconds: number) => {
+        const from = playerRef.current?.getCurrentTime() ?? currentTime
         playerRef.current?.seekTo(seconds, true)
         setCurrentTime(seconds)
-    }, [])
+        onSeek?.(from, seconds)
+    }, [isPlaying, currentTime])
 
     useImperativeHandle(ref, () => ({
         play,
@@ -221,22 +229,32 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
         return pct * duration
     }, [duration])
 
-    const handleProgressClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-        seekTo(calcSeekTime(e))
-    }, [calcSeekTime, seekTo])
+    // const handleProgressClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    //     seekTo(calcSeekTime(e))
+    // }, [calcSeekTime, seekTo])
 
     const handleProgressMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        playerRef.current?.pauseVideo()
         isDragging.current = true
-        seekTo(calcSeekTime(e))
-    }, [calcSeekTime, seekTo])
+        setPreviewPct(calcSeekTime(e) / duration * 100)
+        setCurrentTime(calcSeekTime(e))
+    }, [calcSeekTime, duration])
 
     useEffect(() => {
-        const up = () => { isDragging.current = false }
+        const up = () => { 
+            if (isDragging.current && previewPct !== null) {
+                seekTo((previewPct / 100) * duration)   // single real seek
+            }
+            isDragging.current = false
+            setPreviewPct(null)
+            playerRef.current?.playVideo()
+        }
         const move = (e: MouseEvent) => {
             if (!isDragging.current || !progressRef.current) return
             const rect = progressRef.current.getBoundingClientRect()
             const pct  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-            seekTo(pct * duration)
+            setPreviewPct(pct * 100)
+            setCurrentTime(pct * duration)
         }
         window.addEventListener("mouseup",   up)
         window.addEventListener("mousemove", move)
@@ -244,7 +262,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
             window.removeEventListener("mouseup",   up)
             window.removeEventListener("mousemove", move)
         }
-    }, [duration, seekTo])
+    }, [duration, seekTo, previewPct])
 
     // ── Fullscreen ────────────────────────────────────────────────────────────
 
@@ -366,7 +384,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
                         ref={progressRef}
                         className="relative h-1 mx-3 mb-2 cursor-pointer group"
                         style={{ height: "4px" }}
-                        onClick={handleProgressClick}
+                        // onClick={handleProgressClick}
                         onMouseDown={handleProgressMouseDown}
                     >
                         {/* Track */}

@@ -14,10 +14,12 @@ import { useMediaQuery } from "../hooks/useMediaQuery"
 
 
 // temp
+import { flushSessionData, flushSessionDataWithBeacon } from "../api/session"
 import { shadowingApi } from "../api/shadowing"
 import { sentenceApi } from "../api/shadowingSentence"
 import { getVideoMetaDataApi } from "../api/video"
 import ShadowingProcessing from "../components/videoPlayer/ShadowingProcessing"
+import type { LearningSession } from "../types/session"
 import type { ShadowingSentence } from "../types/shadowing"
 
 export interface VideoMetadata {
@@ -74,8 +76,10 @@ function VideoPlaybackPage() {
     const [isShadowingReady, setIsShadowingReady] = useState<boolean>(false)
     const [selectedCaption, setSelectedCaption] = useState<Caption | null>(null)
     const [isNoVideoError,setIsNoVideoError]=useState<boolean>(false)
-    
-
+    const learningSessionRef = useRef<LearningSession | null>(null)
+    const sessionId = useRef(crypto.randomUUID()) // Generate a unique session ID for this page load
+    const activeIntervalStartTimeRef = useRef<number | null>(null) // Track the start time of the current active interval
+    const lastKnownTimeRef = useRef<number>(0) // Track the last known time of the video for interval tracking
 
     const sortedCaptions = useMemo(
         () => [...captions].sort((a, b) => a.start_time - b.start_time),
@@ -140,6 +144,77 @@ function VideoPlaybackPage() {
     function handlePlaybackSpeedChange(speed: number) {
         setPlaybackSpeed(speed)
         videoPlayerRef.current?.setPlaybackRate(speed)
+    }
+
+    function startPlaybackInterval(startTime: number) {
+        if (!learningSessionRef.current) return
+        if (activeIntervalStartTimeRef.current !== null) return // Already tracking
+
+        activeIntervalStartTimeRef.current = startTime
+    }
+
+    function closePlaybackInterval(endTime: number) {
+        if (!learningSessionRef.current) return
+
+        const startTime = activeIntervalStartTimeRef.current
+        if (startTime === null) return // Not tracking
+        else if (endTime - startTime < 1) return // Ignore very short intervals
+        
+        if (endTime > startTime) {
+            learningSessionRef.current.intervals.push({
+                start_time: Math.round(startTime * 100)/100, end_time: Math.round(endTime * 100)/100})
+        } else if (startTime >= videoMetaData?.duration_seconds) {
+            learningSessionRef.current.intervals.push({
+                start_time: 0.0, end_time: Math.round(endTime * 100)/100})
+        }
+
+        activeIntervalStartTimeRef.current = null
+        console.log("Closed playback interval:", { start_time: startTime, end_time: endTime })
+    }
+
+    function onSeek(from: number, to: number) {
+        closePlaybackInterval(from)
+        activeIntervalStartTimeRef.current = to
+        lastKnownTimeRef.current = to
+    }
+
+    function onPlayingChange(playing: boolean) {
+        setIsVideoPlaying(playing)
+
+        if (playing) {
+            startPlaybackInterval(videoPlayerRef.current?.getCurrentTime() ?? currentTime)
+        }
+    }
+
+    async function flushSession(useBeacon = false) {
+        const session = learningSessionRef.current
+        if (!session || session.intervals.length === 0) return
+        const endTime = Date.now() / 1000 // current time in seconds
+        session.end_time = endTime
+        
+        if (useBeacon) {
+            const success = flushSessionDataWithBeacon(session)
+            if (!success) {
+                console.error("Failed to send session data via Beacon.")
+            } else {
+                console.log("Flushed session via Beacon:", session)
+                learningSessionRef.current!.intervals = []   // clear what's been sent
+            }
+        } else {
+            flushSessionData(session).then(() => {
+                console.log("Flushed session via API:", session)
+                learningSessionRef.current!.intervals = []   // clear what's been sent
+            }).catch((error) => {
+                console.error("Failed to flush session via API:", error)
+            })
+        }
+    }
+
+    function onEnded() {
+        closePlaybackInterval(videoMetaData?.duration_seconds ?? lastKnownTimeRef.current)
+        flushSession(false)
+        activeIntervalStartTimeRef.current = null
+        lastKnownTimeRef.current = 0
     }
 
     // Initialize shadowing mode: start at index 0 and seek
@@ -233,7 +308,51 @@ sentenceApi.get(videoId).then(response => {
 }
 )
     },[mode,videoId])
-    
+
+    // track learning session
+    useEffect(() => {
+        const user = localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!) : null
+        const startTime = Date.now() / 1000 // current time in seconds
+
+        if (!user) return;
+        const userId = user.id
+        learningSessionRef.current = {
+            id: sessionId.current,
+            video_id: videoId,
+            user_id: userId,
+            start_time: startTime,
+            end_time: 0,
+            intervals: []
+        }
+        let flushTimer = setInterval(() => {}, 30_000)
+        if (videoMetaData?.duration_seconds && videoMetaData.duration_seconds > 10 * 60_000) {
+            flushTimer = setInterval(() => flushSession(false), 60_000)
+        }
+        
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "hidden") {
+                videoPlayerRef.current?.pause()
+                closePlaybackInterval(lastKnownTimeRef.current)
+                flushSession(true)
+            }
+        }
+        const handlePageHide = () => {
+            closePlaybackInterval(lastKnownTimeRef.current)
+            flushSession(true)
+        }
+        document.addEventListener("visibilitychange", handleVisibilityChange)
+        document.addEventListener("pagehide", handlePageHide)
+
+        return () => {
+            clearInterval(flushTimer)
+            closePlaybackInterval(lastKnownTimeRef.current)
+            flushSession(false)
+
+            document.removeEventListener("visibilitychange", handleVisibilityChange)
+            document.removeEventListener("pagehide", handlePageHide)
+        }
+    }, [videoId])
+
     if (isLoading) {
         return <>
             <h1>Is Still Loading</h1>
@@ -282,9 +401,11 @@ sentenceApi.get(videoId).then(response => {
                         <VideoPlayer
                             ref={videoPlayerRef}
                             videoId={videoMetaData!.youtube_video_id}
-                            onTimeUpdate={setCurrentTime}
+                            onTimeUpdate={(time)=> {setCurrentTime(time); lastKnownTimeRef.current = time; }}
                             onReady={() => console.log("Player ready")}
-                            onPlayingChange={setIsVideoPlaying}
+                            onPlayingChange={onPlayingChange}
+                            onSeek={onSeek}
+                            onEnded={onEnded}
                             showControls={mode === "lookup"}
                             enableOverlayClick={mode === "lookup"}
                             disableOverlayClick={mode === "shadowing"}
