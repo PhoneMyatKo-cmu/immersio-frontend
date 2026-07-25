@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
 import { MainLayout } from './MainLayout';
+import DashboardPage from './pages/DashboardPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
@@ -17,6 +18,7 @@ export function AppRouter() {
                 <Route path="/login" element={<LoginPage/>}/>
                 <Route path="/register" element={<RegisterPage/>}/>
                 <Route path="/profile" element={<ProfilePage/>}/>
+                <Route path="/dashboard" element={<DashboardPage/>}/>
             </Route>
          </Routes>
     );

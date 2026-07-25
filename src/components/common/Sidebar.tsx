@@ -1,5 +1,5 @@
 // components/Sidebar/Sidebar.tsx
-import { Home, LogIn, Upload, User } from 'lucide-react'
+import { Home, LayoutDashboardIcon, LogIn, Upload, User } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../authContext'
 
@@ -13,6 +13,7 @@ function useNavItems(): SidebarItem[] {
     const {isAuthenticated} = useAuth()
     return [
         { icon: <Home size={20} />, label: 'Home', to: '/' },
+        { icon: <LayoutDashboardIcon size={20} />, label: 'Dashboard', to: '/dashboard' },
         { icon: <Upload size={20} />, label: 'Submit', to: '/submit' },
         {
             icon: isAuthenticated ? <User size={20} /> : <LogIn size={20} />,
