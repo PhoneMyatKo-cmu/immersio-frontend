@@ -1,12 +1,13 @@
 import { ShieldOff, UserX } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { adminUsersApi } from "../../api/adminUsers";
+import { useAuth } from "../../authContext";
+import { LevelBreakdownCard } from "../../components/admin/LevelBreakdownCard";
 import { StatCard } from "../../components/admin/StatCard";
 import { Modal } from "../../components/common/Modal";
 import { Pagination } from "../../components/common/Pagination";
-import { useAuth } from "../../authContext";
-import type { EstimatedLevel, Role } from "../../types/user";
 import type { Paginated, UserAdminRead, UserStats } from "../../types/admin";
+import type { EstimatedLevel, Role } from "../../types/user";
 
 const PAGE_SIZE = 20;
 
@@ -123,11 +124,11 @@ function AdminUsersPage() {
             <h1 className="mb-6 text-2xl font-bold text-white">User management</h1>
 
             {stats && (
-                <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-                    <StatCard label="Total" value={stats.total} hint={`${stats.active} active · ${stats.inactive} inactive`} />
-                    <StatCard label="Admins" value={stats.by_role.admin} hint={`${stats.by_role.learner} learners`} />
+                <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-3">
+                    <StatCard label="Total Learners" value={stats.total} hint={`${stats.active} active · ${stats.inactive} inactive`} />
                     <StatCard label="Signups (30d)" value={stats.signups_last_30_days} hint={`${stats.signups_last_7_days} in last 7d`} />
                     <StatCard label="Active (30d)" value={stats.active_last_30_days} hint={`${stats.active_last_7_days} in last 7d`} />
+                    <LevelBreakdownCard byLevel={stats.by_level} />
                 </div>
             )}
 
