@@ -8,10 +8,10 @@ interface TabProps {
 export default function Tab({ titles, activeTab, onClick, className }: TabProps) {
 
     return (
-        <div className={` flex ${className}`}>
+        <div className={`flex mb-4 ${className}`}>
             {titles.map(({ title, id }) => (
                 <button
-                    className={`flex-1 px-3 py-1 rounded ${activeTab === id ? 'bg-teal-600 text-white' : 'bg-gray-700 text-gray-300'}`}
+                    className={`flex-1 mx-0.5 px-3 py-1 rounded ${activeTab === id ? 'bg-teal-600 text-white' : 'bg-gray-700 text-gray-300'}`}
                     onClick={() => onClick(id)}
                     key={id}
                 >

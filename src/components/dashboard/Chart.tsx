@@ -146,9 +146,11 @@ function Chart(props: ChartProps) {
                                         <YAxis />
                                     )
                                 }
-                                {props.variant === 'study_seconds' &&
+                                {props.variant === 'study_seconds' ? (
                                     <Tooltip formatter={(value: number) => formatTime(value)} />
-                                }
+                                ) : (
+                                    <Tooltip />
+                                )}
                                 <Legend />
                                 {charts.map((chart) => {
                                     if (chart == 'videos_watched') {
