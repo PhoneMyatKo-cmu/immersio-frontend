@@ -26,6 +26,14 @@ function LibraryPage() {
         setActiveTab(tabId);
     };
 
+    const handleRemoveSaved = (vocabId: number) => {
+        userVocabApi.removeSavedVocab(user.id, vocabId).then(() => {
+            setSavedVocabData((prev) => prev && prev.filter((vocab) => vocab.vocab_id !== vocabId));
+        }).catch((error) => {
+            console.error("Error removing saved vocab:", error);
+        });
+    };
+
     useEffect(() => {
         if (!user) return;
         userVocabApi.get(user.id).then((response) => {
@@ -70,7 +78,7 @@ function LibraryPage() {
                 <Tab className="flex w-full" titles={tabs} activeTab={activeTab} onClick={handleTabChange} />
                 
             </div>
-            {activeTab === 'vocab_saved' && savedVocabData && <VocabList vocabItems={savedVocabData} headers={tabs[0].headers} />}
+            {activeTab === 'vocab_saved' && savedVocabData && <VocabList vocabItems={savedVocabData} headers={tabs[0].headers} showRemove onRemove={handleRemoveSaved} />}
             {activeTab === 'vocab_seen' && vocabSeenData && <VocabList vocabItems={vocabSeenData} headers={tabs[1].headers} />}
             {activeTab === 'vocab_known' && vocabKnownData && <VocabList vocabItems={vocabKnownData} headers={tabs[2].headers} />}
         </div>

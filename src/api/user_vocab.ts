@@ -15,5 +15,13 @@ export const userVocabApi = {
                 Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
             },
         });
+    },
+    
+    removeSavedVocab: async (userId: number, vocabId: number) => {
+        return apiClient.delete(`/vocab/delete/${userId}/${vocabId}`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+        });
     }
 }
