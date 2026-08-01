@@ -1,5 +1,6 @@
 import { REVIEW_GRADES, type ReviewGrade, type ReviewVocabItem } from "../../types/review";
 import PronunciationButton from "../common/PronunciationButton";
+import { YoutubeClipPlayer } from "./YoutubeClipPlayer";
 
 interface ReviewCardProps {
     vocab: ReviewVocabItem;
@@ -27,10 +28,16 @@ export function ReviewCard({ vocab, index, total, isRevealed, onReveal, onGrade 
             <div className="flex flex-col items-center gap-3 p-8 bg-gray-800/70 rounded-lg border border-gray-600 text-white w-full text-center">
                 <div className="flex items-center gap-2">
                     <span className="text-3xl font-bold">{vocab.japanese_form}</span>
-                    <PronunciationButton text={vocab.japanese_form} />
+                    {isRevealed && <PronunciationButton text={vocab.japanese_form} />}
                 </div>
                 {vocab.lemma !== vocab.japanese_form && (
                     <span className="text-white/60">{vocab.lemma}</span>
+                )}
+
+                {vocab.caption && !isRevealed && (
+                    <div className="bg-gray-700/60 rounded-sm p-2 w-full text-sm text-white/80">
+                        <p>{vocab.caption}</p>
+                    </div>
                 )}
 
                 {!isRevealed ? (
@@ -45,12 +52,23 @@ export function ReviewCard({ vocab, index, total, isRevealed, onReveal, onGrade 
                         <span className="text-xl">{vocab.reading}</span>
                         <p className="bg-gray-700 rounded-sm p-2 w-full">{meaningsText}</p>
                         {vocab.caption && (
-                            <div className="bg-gray-700/60 rounded-sm p-2 w-full text-sm text-white/80">
-                                <p>{vocab.caption}</p>
-                                {vocab.caption_translation && (
-                                    <p className="text-white/50 mt-1">{vocab.caption_translation}</p>
-                                )}
+                            <div className="flex flex-row items-center justify-center bg-gray-700/60 rounded-sm p-2 w-full text-sm text-white/80">
+                                <div>
+                                    <p>{vocab.caption}</p>
+                                    {vocab.caption_translation && (
+                                        <p className="text-white/50 mt-1">{vocab.caption_translation}</p>
+                                    )}
+                                </div>
+                                <PronunciationButton text={vocab.caption} />
                             </div>
+                        )}
+
+                        {vocab.youtube_video_id && vocab.start_time != null && vocab.end_time != null && (
+                            <YoutubeClipPlayer
+                                videoId={vocab.youtube_video_id}
+                                startTime={vocab.start_time}
+                                endTime={vocab.end_time}
+                            />
                         )}
 
                         <div className="flex gap-2 w-full mt-2">
