@@ -1,11 +1,13 @@
 
 import { useState } from "react";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { chartPeriodConfig, chartVariantConfig } from "../../config/dashboard";
 import type { ChartData, DashboardChartData } from "../../types/dashboard";
 import Tab from "../common/Tab";
 
-export type ChartVariant = 'study_seconds' | 'videos_watched' | 'vocab';
+export type ChartVariant = 'study_seconds' | 'videos_watched' | 'vocab' | 'srs_state';
+
+export type SrsStateDatum = { name: string; value: number };
 
 interface ChartProps {
     data: DashboardChartData;
@@ -13,10 +15,11 @@ interface ChartProps {
     period?: 'week' | 'month' | 'all_time';
     onVariantChange: (variant: ChartVariant) => void;
     onPeriodChange: (period: 'week' | 'month' | 'all_time') => void;
+    srsStateData?: SrsStateDatum[];
 }
 
 function Chart(props: ChartProps) {
-    const chartVariants = ['study_seconds', 'videos_watched', 'vocab'] as ChartVariant[];
+    const chartVariants = ['study_seconds', 'videos_watched', 'vocab', 'srs_state'] as ChartVariant[];
     const periods = ['week', 'month', 'all_time'] as const;
 
     const config = chartVariantConfig[props.variant];
@@ -109,31 +112,57 @@ function Chart(props: ChartProps) {
                 onClick={props.onVariantChange}
             />
 
-            <div className="flex justify-between items-center mb-4">
-                <Tab
-                    className="flex space-x-2 mb-4 text-md w-[40%]"
-                    titles={periods.map((period) => ({
-                        title: chartPeriodConfig[period].title,
-                        id: period
-                    }))}
-                    activeTab={props.period}
-                    onClick={props.onPeriodChange}
-                />
+            {props.variant !== 'srs_state' && (
+                <div className="flex justify-between items-center mb-4">
+                    <Tab
+                        className="flex space-x-2 mb-4 text-md w-[40%]"
+                        titles={periods.map((period) => ({
+                            title: chartPeriodConfig[period].title,
+                            id: period
+                        }))}
+                        activeTab={props.period}
+                        onClick={props.onPeriodChange}
+                    />
 
-                <Tab
-                    className="flex space-x-2 mb-4 text-md w-[25%]"
-                    titles={[
-                        { title: 'Daily', id: 'daily' },
-                        { title: 'Cumulative', id: 'cumulative' }
-                    ]}
-                    activeTab={isCumulative ? 'cumulative' : 'daily'}
-                    onClick={(id) => {
-                        setIsCumulative(id === 'cumulative');
-                    }}
-                />
-            </div>
-            
+                    <Tab
+                        className="flex space-x-2 mb-4 text-md w-[25%]"
+                        titles={[
+                            { title: 'Daily', id: 'daily' },
+                            { title: 'Cumulative', id: 'cumulative' }
+                        ]}
+                        activeTab={isCumulative ? 'cumulative' : 'daily'}
+                        onClick={(id) => {
+                            setIsCumulative(id === 'cumulative');
+                        }}
+                    />
+                </div>
+            )}
+
             <div className="h-64">
+                {props.variant === 'srs_state' ? (
+                    !props.srsStateData || props.srsStateData.every((entry) => entry.value === 0) ? (
+                        <div className="flex h-full items-center justify-center text-white/60">
+                            No saved vocabulary yet.
+                        </div>
+                    ) : (
+                        <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                                <Pie
+                                    data={props.srsStateData}
+                                    dataKey="value"
+                                    nameKey="name"
+                                    label
+                                >
+                                    {props.srsStateData.map((entry, index) => (
+                                        <Cell key={entry.name} fill={config.color ? config.color[index] : '#8884d8'} />
+                                    ))}
+                                </Pie>
+                                <Tooltip />
+                                <Legend />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    )
+                ) : (
                 <ResponsiveContainer width="100%" height={300}>
                     {
                         lineType === 'line' ? (
@@ -190,6 +219,7 @@ function Chart(props: ChartProps) {
                         )
                     }
                 </ResponsiveContainer>
+                )}
             </div>
         </div>
     );

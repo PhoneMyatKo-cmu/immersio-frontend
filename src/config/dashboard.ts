@@ -40,6 +40,16 @@ export const chartVariantConfig: Record<ChartVariant, {
         color: ['#2196F3', '#00BCD4'], // Sky Blue and Cyan
         legend: ['Vocabulary Seen', 'Vocabulary Known'],
     },
+    srs_state: {
+        title: 'SRS Progress',
+        queryParams: [],
+        chartType: {
+            'daily': 'bar',
+            'cumulative': 'bar'
+        },
+        color: ['#6B7280', '#F59E0B', '#10B981'], // Gray, Amber, Emerald
+        legend: ['Not Studied', 'Studying', 'Mastered'],
+    },
 }
 
 export const chartPeriodConfig: Record<'week' | 'month' | 'all_time', {

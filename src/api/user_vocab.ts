@@ -16,7 +16,7 @@ export const userVocabApi = {
             },
         });
     },
-    
+
     removeSavedVocab: async (userId: number, vocabId: number) => {
         return apiClient.delete(`/vocab/delete/${userId}/${vocabId}`, {
             headers: {
