@@ -1,20 +1,29 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getChartData, getDashboardStatistics } from "../api/dashboard";
+import { userVocabApi } from "../api/user_vocab";
 import { useAuth } from "../authContext";
 import { Modal } from "../components/common/Modal";
-import type { ChartVariant } from "../components/dashboard/Chart";
+import type { ChartVariant, SrsStateDatum } from "../components/dashboard/Chart";
 import Chart from "../components/dashboard/Chart";
 import StatisticsBox from "../components/dashboard/StatisticsBox";
 import { chartVariantConfig } from "../config/dashboard";
 import type { DashboardChartData, DashboardStatistics } from "../types/dashboard";
+import type { SavedVocab } from "../types/vocab";
 
+const SRS_STATE_LABELS: Record<SavedVocab["srs_state"], string> = {
+    not_studied: "Not Studied",
+    studying: "Studying",
+    mastered: "Mastered",
+};
 
 function DashboardPage() {
     const [ statistics, setStatistics] = useState<DashboardStatistics | null>(null);
     const [ dashboardChartData, setDashboardChartData ] = useState<DashboardChartData>({});
     const [ chartOptions, setChartOptions] = useState<ChartVariant>('study_seconds');
     const [ chartPeriod, setChartPeriod] = useState<'week' | 'month' | 'all_time'>('week');
+    const [ savedVocabCount, setSavedVocabCount ] = useState<number | null>(null);
+    const [ srsStateData, setSrsStateData ] = useState<SrsStateDatum[]>([]);
     const { user, isAuthenticated } = useAuth();
     const navigate = useNavigate()
 
@@ -32,6 +41,27 @@ function DashboardPage() {
             setStatistics(response.data);
         }).catch((error) => {
             console.error("Error fetching dashboard statistics:", error);
+        });
+    }, [user])
+
+    useEffect(() => {
+        if (!user) return;
+        userVocabApi.getSavedVocab(user.id).then((response) => {
+            const savedVocab: SavedVocab[] = response.data['saved_vocab'];
+            setSavedVocabCount(savedVocab.length);
+
+            const counts: Record<SavedVocab["srs_state"], number> = { not_studied: 0, studying: 0, mastered: 0 };
+            for (const vocab of savedVocab) {
+                counts[vocab.srs_state] = (counts[vocab.srs_state] ?? 0) + 1;
+            }
+            setSrsStateData(
+                (Object.keys(SRS_STATE_LABELS) as SavedVocab["srs_state"][]).map((state) => ({
+                    name: SRS_STATE_LABELS[state],
+                    value: counts[state],
+                }))
+            );
+        }).catch((error) => {
+            console.error("Error fetching saved vocab:", error);
         });
     }, [user])
 
@@ -98,6 +128,11 @@ function DashboardPage() {
                             value={statistics.total_vocab_known}
                             bgColor="bg-violet-500/75"
                         />
+                        <StatisticsBox
+                            title="Vocabulary Saved"
+                            value={savedVocabCount ?? 0}
+                            bgColor="bg-teal-500/75"
+                        />
                     </>
                 ) : (
                     <p>Loading statistics...</p>
@@ -105,12 +140,13 @@ function DashboardPage() {
             </div>
             <div className="p-4">
                 {dashboardChartData ? (
-                    <Chart 
+                    <Chart
                     data={dashboardChartData}
                     variant={chartOptions}
                     period={chartPeriod}
                     onVariantChange={handleVariantChange}
                     onPeriodChange={handlePeriodChange}
+                    srsStateData={srsStateData}
                     />
                 ) : (
                     <p>Loading chart data...</p>
