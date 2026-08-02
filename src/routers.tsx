@@ -6,6 +6,7 @@ import LibraryPage from './pages/LibraryPage';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import RegisterPage from './pages/RegisterPage';
+import ReviewPage from './pages/ReviewPage';
 import SubmissionPage from './pages/SubmissionPage';
 import VideoPlaybackPage from './pages/VideoPlaybackPage';
 
@@ -21,6 +22,7 @@ export function AppRouter() {
                 <Route path="/profile" element={<ProfilePage/>}/>
                 <Route path="/dashboard" element={<DashboardPage/>}/>
                 <Route path="/library" element={<LibraryPage/>}/>
+                <Route path="/review" element={<ReviewPage/>}/>
             </Route>
          </Routes>
     );
