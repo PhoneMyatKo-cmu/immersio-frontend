@@ -211,8 +211,8 @@ function AdminUsersPage() {
                                         </td>
                                         <td className="px-4 py-3">
                                             {u.is_active
-                                                ? <Badge tone="green">Active</Badge>
-                                                : <Badge tone="red">Inactive</Badge>}
+                                                ? <Badge tone="green">Enabled</Badge>
+                                                : <Badge tone="red">Disabled</Badge>}
                                         </td>
                                         <td className="px-4 py-3 text-white/50">{formatDate(u.last_login_at)}</td>
                                         <td className="px-4 py-3">

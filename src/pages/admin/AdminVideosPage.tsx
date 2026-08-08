@@ -158,9 +158,9 @@ function AdminVideosPage() {
                     onChange={(e) => { setIsActive(e.target.value as "" | "true" | "false"); setPage(1); }}
                     className="rounded-lg border border-white/10 bg-[#0a1628] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
                 >
-                    <option value="">Active + inactive</option>
+                    <option value="">Active + Removed</option>
                     <option value="true">Active only</option>
-                    <option value="false">Inactive only</option>
+                    <option value="false">Removed only</option>
                 </select>
             </div>
 
@@ -209,7 +209,7 @@ function AdminVideosPage() {
                                     <td className="px-4 py-3">
                                         {v.is_active
                                             ? <Badge tone="green">Active</Badge>
-                                            : <Badge tone="red">Inactive</Badge>}
+                                            : <Badge tone="red">Removed</Badge>}
                                     </td>
                                     <td className="px-4 py-3 text-white/50">{formatDate(v.created_at)}</td>
                                     <td className="px-4 py-3">
