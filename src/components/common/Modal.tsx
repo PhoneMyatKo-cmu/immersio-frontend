@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { useEffect } from 'react';
 
 export type ModalVariant = 'info' | 'success' | 'warning' | 'error';
+export type ConfirmTone = 'primary' | 'danger';
 
 interface ModalProps {
     isOpen: boolean;
@@ -11,6 +12,7 @@ interface ModalProps {
     message: string;
     variant?: ModalVariant;
     confirmText?: string;
+    confirmTone?: ConfirmTone;
     onConfirm?: () => void;
     closeOnBackdrop?: boolean;
     cancelRequired?: boolean;
@@ -24,6 +26,11 @@ const variantStyles: Record<ModalVariant, string> = {
     error: 'border-t-red-500',
 };
 
+const confirmToneStyles: Record<ConfirmTone, string> = {
+    primary: 'bg-teal-600 hover:bg-teal-700',
+    danger: 'bg-red-600 hover:bg-red-700',
+};
+
 export function Modal({
     isOpen,
     onClose,
@@ -31,6 +38,7 @@ export function Modal({
     message,
     variant = 'info',
     confirmText = 'OK',
+    confirmTone = 'primary',
     onConfirm,
     closeOnBackdrop = true,
     cancelRequired=false,
@@ -121,7 +129,7 @@ export function Modal({
                     
                     <button
                         onClick={handleConfirm}
-                        className="rounded-md bg-teal-600 px-5 py-2 text-sm font-medium text-white transition-all hover:bg-teal-700"
+                        className={`rounded-md px-5 py-2 text-sm font-medium text-white transition-all ${confirmToneStyles[confirmTone]}`}
                     >
                         {confirmText}
                     </button>

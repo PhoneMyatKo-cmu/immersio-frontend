@@ -1,5 +1,5 @@
 // components/Sidebar/Sidebar.tsx
-import { Home, LayoutDashboardIcon, Library, LogIn, LucideBookOpen, Upload, User } from 'lucide-react'
+import { Home, LayoutDashboardIcon, Library, LogIn, LucideBookOpen, Shield, Upload, User } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../authContext'
 
@@ -10,13 +10,17 @@ interface SidebarItem {
 }
 
 function useNavItems(): SidebarItem[] {
-    const {isAuthenticated} = useAuth()
+    const {isAuthenticated, user} = useAuth()
     return [
         { icon: <Home size={20} />, label: 'Home', to: '/' },
         { icon: <LayoutDashboardIcon size={20} />, label: 'Dashboard', to: '/dashboard' },
         { icon: <Library size={20} />, label: 'Library', to: '/library' },
         { icon: <LucideBookOpen size={20} />, label: 'Vocabulary Review', to: '/review' },
         { icon: <Upload size={20} />, label: 'Submit', to: '/submit' },
+        // Only admins see the console link — hidden from learners and anon users.
+        ...(user?.role === 'ADMIN'
+            ? [{ icon: <Shield size={20} />, label: 'Admin', to: '/admin' }]
+            : []),
         {
             icon: isAuthenticated ? <User size={20} /> : <LogIn size={20} />,
             label: isAuthenticated ? 'Profile' : 'Login',

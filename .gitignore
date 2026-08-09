@@ -27,3 +27,5 @@ dist-ssr
 test.ts
 /.env
 src/components/videoPlayer/shadowingMockResults.ts
+CLAUDE.md
+AdminAPI.md
