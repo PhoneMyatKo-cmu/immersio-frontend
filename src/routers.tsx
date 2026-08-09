@@ -2,10 +2,13 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { MainLayout } from './MainLayout';
 import { AdminLayout } from './components/admin/AdminLayout';
 import { AdminRoute } from './components/admin/AdminRoute';
+import DashboardPage from './pages/DashboardPage';
 import HomePage from './pages/HomePage';
+import LibraryPage from './pages/LibraryPage';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import RegisterPage from './pages/RegisterPage';
+import ReviewPage from './pages/ReviewPage';
 import SubmissionPage from './pages/SubmissionPage';
 import VideoPlaybackPage from './pages/VideoPlaybackPage';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
@@ -22,6 +25,9 @@ export function AppRouter() {
                 <Route path="/login" element={<LoginPage/>}/>
                 <Route path="/register" element={<RegisterPage/>}/>
                 <Route path="/profile" element={<ProfilePage/>}/>
+                <Route path="/dashboard" element={<DashboardPage/>}/>
+                <Route path="/library" element={<LibraryPage/>}/>
+                <Route path="/review" element={<ReviewPage/>}/>
             </Route>
 
             {/* Admin — dedicated login + role-gated dashboard */}
