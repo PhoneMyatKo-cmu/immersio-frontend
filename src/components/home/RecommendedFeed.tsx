@@ -3,10 +3,12 @@ import { RecommendationRow } from "./RecommendationRow";
 
 interface RecommendedFeedProps {
     sections: RecommendationSection[];
+    // When true, cards show only a rough "may know %" estimate (no word/difficulty stats).
+    isColdStart?: boolean;
 }
 
-export function RecommendedFeed({ sections }: RecommendedFeedProps) {
-    // Cold-start / new-user: no eligible videos yet.
+export function RecommendedFeed({ sections, isColdStart = false }: RecommendedFeedProps) {
+    // Cold-start / new-user with no eligible videos at all.
     if (sections.length === 0) {
         return (
             <div className="mt-6 flex flex-col items-center justify-center py-12 text-center">
@@ -26,7 +28,7 @@ export function RecommendedFeed({ sections }: RecommendedFeedProps) {
     return (
         <div className="mt-6">
             {sections.map((section) => (
-                <RecommendationRow key={section.key} section={section} />
+                <RecommendationRow key={section.key} section={section} isColdStart={isColdStart} />
             ))}
         </div>
     );

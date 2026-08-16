@@ -13,7 +13,7 @@ import { EstimatedLevelValues, type EstimatedLevel, type Video } from '../types/
 type HomeTab = 'feed' | 'recommended';
 
 const TABS = [
-    { id: 'feed', title: 'All' },
+    { id: 'feed', title: 'Explore' },
     { id: 'recommended', title: 'Recommended for You' },
 ];
 
@@ -31,6 +31,7 @@ function HomePage() {
 
     // --- Recommended for You (sectioned, Netflix-style feed) ---
     const [recSections, setRecSections] = useState<RecommendationSection[]>([]);
+    const [recColdStart, setRecColdStart] = useState(false);
     const [recLoading, setRecLoading] = useState(false);
     const [recRefreshKey, setRecRefreshKey] = useState(0);
     const [level, setLevel] = useState<EstimatedLevel>(
@@ -68,12 +69,14 @@ function HomePage() {
                 const data = await getRecommendations();
                 if (cancelled) return;
                 setRecSections(data.sections);
+                setRecColdStart(data.is_cold_start);
                 // Keep the header chip in sync with the level the backend scored against.
                 if (data.user_level) setLevel(data.user_level);
             } catch (error) {
                 if (cancelled) return;
                 console.error('Error fetching recommendations:', error);
                 setRecSections([]);
+                setRecColdStart(false);
             } finally {
                 if (!cancelled) setRecLoading(false);
             }
@@ -121,7 +124,7 @@ function HomePage() {
                             <div className="h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-teal-500" />
                         </div>
                     ) : (
-                        <RecommendedFeed sections={recSections} />
+                        <RecommendedFeed sections={recSections} isColdStart={recColdStart} />
                     )}
                 </>
             )}

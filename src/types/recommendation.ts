@@ -1,6 +1,10 @@
 import type { EstimatedLevel } from "./user";
 
-export type RecommendationDifficulty = "best_fit" | "stretch" | "comfortable" | "too_advanced";
+export type RecommendationDifficulty =
+  | "best_fit"
+  | "stretch"
+  | "comfortable"
+  | "too_advanced";
 
 // Raw scoring breakdown — debug only, may be null in normal responses. Never shown to users.
 export type RecommendationReasons = {
@@ -25,6 +29,7 @@ export type RecommendedVideo = {
   // Internal rank value — never displayed to users.
   score: number;
   understand_percent: number;
+  may_know_percent?: number;
   difficulty: RecommendationDifficulty;
   new_word_count: number;
   review_word_count: number;
@@ -43,6 +48,7 @@ export type RecommendationSection = {
 
 export type RecommendationFeed = {
   user_level: EstimatedLevel;
+  is_cold_start: boolean;
   // Pre-ordered rows; empty rows are already stripped by the backend.
   sections: RecommendationSection[];
 };

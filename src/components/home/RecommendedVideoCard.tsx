@@ -26,13 +26,17 @@ interface RecommendedVideoCardProps {
     // Only the mixed `top_picks` row shows the difficulty badge; the difficulty-named
     // rows already convey it via their heading.
     showDifficulty?: boolean;
+    // Cold start: the user has no vocab history yet, so the per-video word/difficulty
+    // stats aren't meaningful. Show only a rough "may know %" estimate.
+    isColdStart?: boolean;
 }
 
-export function RecommendedVideoCard({ rec, showDifficulty = false }: RecommendedVideoCardProps) {
+export function RecommendedVideoCard({ rec, showDifficulty = false, isColdStart = false }: RecommendedVideoCardProps) {
     const badge = difficultyBadge[rec.difficulty] ?? fallbackBadge;
     // Use the top-level fields — `reasons` is debug-only and usually null. Coalesce
     // so badges never read "undefined" if a count is absent.
     const understandPercent = rec.understand_percent ?? 0;
+    const mayKnowPercent = rec.may_know_percent ?? 0;
     const newWords = rec.new_word_count ?? 0;
     const reviewWords = rec.review_word_count ?? 0;
 
@@ -53,25 +57,37 @@ export function RecommendedVideoCard({ rec, showDifficulty = false }: Recommende
                 <p className="text-sm text-gray-400">{rec.video.channel_name}</p>
             </Link>
 
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-                {showDifficulty && (
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${badge.className}`}>
-                        {badge.label}
+            {isColdStart ? (
+                // Cold start: only a rough "may know %" tag — the word/difficulty stats
+                // aren't meaningful without vocab history.
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-teal-500/15 px-2.5 py-1 text-xs font-medium text-teal-300">
+                        You may know ~{mayKnowPercent}%
                     </span>
-                )}
-                <span className="rounded-full bg-teal-500/15 px-2.5 py-1 text-xs font-medium text-teal-300">
-                    {newWords} new word{newWords === 1 ? "" : "s"}
-                </span>
-                {reviewWords > 0 && (
-                    <span className="rounded-full bg-blue-500/15 px-2.5 py-1 text-xs font-medium text-blue-300">
-                        Reviews {reviewWords} word{reviewWords === 1 ? "" : "s"} you're studying
-                    </span>
-                )}
-            </div>
+                </div>
+            ) : (
+                <>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                        {showDifficulty && (
+                            <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${badge.className}`}>
+                                {badge.label}
+                            </span>
+                        )}
+                        <span className="rounded-full bg-teal-500/15 px-2.5 py-1 text-xs font-medium text-teal-300">
+                            {newWords} new word{newWords === 1 ? "" : "s"}
+                        </span>
+                        {reviewWords > 0 && (
+                            <span className="rounded-full bg-blue-500/15 px-2.5 py-1 text-xs font-medium text-blue-300">
+                                Reviews {reviewWords} word{reviewWords === 1 ? "" : "s"} you're studying
+                            </span>
+                        )}
+                    </div>
 
-            <p className="mt-3 text-sm text-white/70">
-                You'll understand ~{understandPercent}%
-            </p>
+                    <p className="mt-3 text-sm text-white/70">
+                        You may understand ~{understandPercent}%
+                    </p>
+                </>
+            )}
         </div>
     );
 }
