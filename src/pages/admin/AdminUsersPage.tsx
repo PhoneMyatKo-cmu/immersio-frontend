@@ -119,6 +119,29 @@ function AdminUsersPage() {
             : `Deactivate ${pending.user.first_name} ${pending.user.last_name}? They will be blocked from logging in.`
         : "";
 
+    // Shared between the desktop table row and the mobile card.
+    const userActions = (u: UserAdminRead, isSelf: boolean) => (
+        <>
+            {u.role === "ADMIN" && !isSelf && (
+                <button
+                    onClick={() => setPending({ type: "role", user: u, nextRole: "LEARNER" })}
+                    title="Demote to learner"
+                    className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-white/60 transition-colors hover:bg-white/5"
+                >
+                    <ShieldOff size={16} />
+                </button>
+            )}
+            <button
+                onClick={() => setPending({ type: "deactivate", user: u })}
+                disabled={isSelf || !u.is_active}
+                title={isSelf ? "You can't deactivate yourself" : !u.is_active ? "Already inactive" : "Deactivate"}
+                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-red-400 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-30"
+            >
+                <UserX size={16} />
+            </button>
+        </>
+    );
+
     return (
         <div>
             <h1 className="mb-6 text-2xl font-bold text-white">User management</h1>
@@ -173,8 +196,8 @@ function AdminUsersPage() {
                 </select>
             </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto rounded-xl border border-white/10 bg-[#111c30]">
+            {/* Table (desktop) */}
+            <div className="hidden overflow-x-auto rounded-xl border border-white/10 bg-[#111c30] md:block">
                 <table className="w-full text-left text-sm">
                     <thead className="border-b border-white/10 bg-white/[0.06] text-xs uppercase tracking-wide text-white/60">
                         <tr>
@@ -217,23 +240,7 @@ function AdminUsersPage() {
                                         <td className="px-4 py-3 text-white/50">{formatDate(u.last_login_at)}</td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center justify-end gap-1">
-                                                {u.role === "ADMIN" && !isSelf && (
-                                                    <button
-                                                        onClick={() => setPending({ type: "role", user: u, nextRole: "LEARNER" })}
-                                                        title="Demote to learner"
-                                                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-white/60 transition-colors hover:bg-white/5"
-                                                    >
-                                                        <ShieldOff size={16} />
-                                                    </button>
-                                                )}
-                                                <button
-                                                    onClick={() => setPending({ type: "deactivate", user: u })}
-                                                    disabled={isSelf || !u.is_active}
-                                                    title={isSelf ? "You can't deactivate yourself" : !u.is_active ? "Already inactive" : "Deactivate"}
-                                                    className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-red-400 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-30"
-                                                >
-                                                    <UserX size={16} />
-                                                </button>
+                                                {userActions(u, isSelf)}
                                             </div>
                                         </td>
                                     </tr>
@@ -242,6 +249,49 @@ function AdminUsersPage() {
                         )}
                     </tbody>
                 </table>
+            </div>
+
+            {/* Card list (mobile) */}
+            <div className="space-y-3 md:hidden">
+                {loading ? (
+                    <div className="rounded-xl border border-white/10 bg-[#111c30] px-4 py-10 text-center text-white/40">
+                        Loading…
+                    </div>
+                ) : !data || data.items.length === 0 ? (
+                    <div className="rounded-xl border border-white/10 bg-[#111c30] px-4 py-10 text-center text-white/40">
+                        No users found.
+                    </div>
+                ) : (
+                    data.items.map((u) => {
+                        const isSelf = currentUser?.id === u.id;
+                        return (
+                            <div key={u.id} className="rounded-xl border border-white/10 bg-[#111c30] p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <div className="font-medium text-white">
+                                            {u.first_name} {u.last_name}
+                                            {isSelf && <span className="ml-2 text-xs text-white/40">(you)</span>}
+                                        </div>
+                                        <div className="truncate text-xs text-white/40">{u.email}</div>
+                                    </div>
+                                    <div className="flex flex-shrink-0 items-center gap-1">
+                                        {userActions(u, isSelf)}
+                                    </div>
+                                </div>
+                                <div className="mt-3 flex flex-wrap items-center gap-2">
+                                    <Badge tone={u.role === "ADMIN" ? "teal" : "slate"}>{u.role}</Badge>
+                                    {u.is_active
+                                        ? <Badge tone="green">Enabled</Badge>
+                                        : <Badge tone="red">Disabled</Badge>}
+                                    {u.role !== "ADMIN" && (
+                                        <span className="text-xs capitalize text-white/50">{u.estimated_level}</span>
+                                    )}
+                                </div>
+                                <div className="mt-2 text-xs text-white/50">Last login: {formatDate(u.last_login_at)}</div>
+                            </div>
+                        );
+                    })
+                )}
             </div>
 
             {data && data.total_pages > 1 && (

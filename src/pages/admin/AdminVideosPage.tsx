@@ -112,16 +112,41 @@ function AdminVideosPage() {
         }
     };
 
+    // Shared between the desktop table row and the mobile card.
+    const videoActions = (v: AdminVideoItem) => (
+        <>
+            <a
+                href={`/video/${v.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Preview as learner (new tab)"
+                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-white/60 transition-colors hover:bg-white/5 hover:text-white/90"
+            >
+                <ExternalLink size={16} />
+            </a>
+            <button
+                onClick={() => setDeleteTarget(v)}
+                disabled={!v.is_active}
+                title={v.is_active ? "Remove video" : "Already removed"}
+                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-red-400 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-30"
+            >
+                <Trash2 size={16} />
+            </button>
+        </>
+    );
+
     return (
         <div>
             <div className="mb-6 flex items-center justify-between">
                 <h1 className="text-2xl font-bold text-white">Video management</h1>
                 <button
                     onClick={() => setShowAdd(true)}
-                    className="flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-teal-700"
+                    title="Add video"
+                    aria-label="Add video"
+                    className="flex flex-shrink-0 items-center gap-2 rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-teal-700 sm:px-4"
                 >
                     <Plus size={18} />
-                    Add video
+                    <span className="hidden sm:inline">Add video</span>
                 </button>
             </div>
 
@@ -164,8 +189,8 @@ function AdminVideosPage() {
                 </select>
             </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto rounded-xl border border-white/10 bg-[#111c30]">
+            {/* Table (desktop) */}
+            <div className="hidden overflow-x-auto rounded-xl border border-white/10 bg-[#111c30] md:block">
                 <table className="w-full text-left text-sm">
                     <thead className="border-b border-white/10 bg-white/[0.06] text-xs uppercase tracking-wide text-white/60">
                         <tr>
@@ -214,23 +239,7 @@ function AdminVideosPage() {
                                     <td className="px-4 py-3 text-white/50">{formatDate(v.created_at)}</td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-center justify-end gap-1">
-                                            <a
-                                                href={`/video/${v.id}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                title="Preview as learner (new tab)"
-                                                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-white/60 transition-colors hover:bg-white/5 hover:text-white/90"
-                                            >
-                                                <ExternalLink size={16} />
-                                            </a>
-                                            <button
-                                                onClick={() => setDeleteTarget(v)}
-                                                disabled={!v.is_active}
-                                                title={v.is_active ? "Remove video" : "Already removed"}
-                                                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-red-400 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-30"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
+                                            {videoActions(v)}
                                         </div>
                                     </td>
                                 </tr>
@@ -238,6 +247,48 @@ function AdminVideosPage() {
                         )}
                     </tbody>
                 </table>
+            </div>
+
+            {/* Card list (mobile) */}
+            <div className="space-y-3 md:hidden">
+                {loading ? (
+                    <div className="rounded-xl border border-white/10 bg-[#111c30] px-4 py-10 text-center text-white/40">
+                        Loading…
+                    </div>
+                ) : !data || data.items.length === 0 ? (
+                    <div className="rounded-xl border border-white/10 bg-[#111c30] px-4 py-10 text-center text-white/40">
+                        No videos found.
+                    </div>
+                ) : (
+                    data.items.map((v) => (
+                        <div key={v.id} className="rounded-xl border border-white/10 bg-[#111c30] p-4">
+                            <div className="flex items-start gap-3">
+                                <img src={v.thumbnail_url} alt="" className="h-12 w-20 flex-shrink-0 rounded object-cover" />
+                                <div className="min-w-0 flex-1">
+                                    <div className="font-medium text-white">{v.title}</div>
+                                    <div className="truncate text-xs text-white/40">
+                                        {v.channel_name} · {formatDuration(v.duration_seconds)}
+                                    </div>
+                                </div>
+                                <div className="flex flex-shrink-0 items-center gap-1">
+                                    {videoActions(v)}
+                                </div>
+                            </div>
+                            <div className="mt-3 flex flex-wrap items-center gap-2">
+                                <Badge tone={v.source === "curated" ? "green" : "slate"}>
+                                    {v.source === "curated" ? "Curated" : "User"}
+                                </Badge>
+                                {v.is_shadowing_ready
+                                    ? <Badge tone="green">Shadowing ready</Badge>
+                                    : <Badge tone="amber">Processing</Badge>}
+                                {v.is_active
+                                    ? <Badge tone="green">Active</Badge>
+                                    : <Badge tone="red">Removed</Badge>}
+                            </div>
+                            <div className="mt-2 text-xs text-white/50">Added: {formatDate(v.created_at)}</div>
+                        </div>
+                    ))
+                )}
             </div>
 
             {data && data.total_pages > 1 && (

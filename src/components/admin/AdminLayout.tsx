@@ -29,24 +29,39 @@ export function AdminLayout() {
             {/* Admin chrome accent — a persistent cue that this is the back office, not the product */}
             <div className="h-1 w-full bg-amber-500" />
             <header className="sticky top-0 z-40 border-b border-amber-500/20 bg-[#0d1526]/95 backdrop-blur">
-                <div className="mx-auto flex  items-center justify-between gap-4 px-8 py-3">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-600 text-lg font-bold">
-                            I
-                        </div>
-                        <span className="flex items-center gap-2 text-sm font-semibold tracking-wide text-white/80">
-                            Admin
-                            <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-400">
-                                Console
+                <div className="mx-auto flex flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between md:gap-4 md:px-8">
+                    {/* Brand row — on mobile this shares the line with a Logout button */}
+                    <div className="flex items-center justify-between md:justify-start">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-600 text-lg font-bold">
+                                I
+                            </div>
+                            <span className="flex items-center gap-2 text-sm font-semibold tracking-wide text-white/80">
+                                Admin
+                                <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                                    Console
+                                </span>
                             </span>
-                        </span>
+                        </div>
+
+                        {/* Mobile-only logout (desktop keeps it in the right-hand group) */}
+                        <button
+                            onClick={handleLogout}
+                            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-white/60 transition-colors hover:bg-white/5 hover:text-white/90 md:hidden"
+                        >
+                            <LogOut size={18} />
+                            Logout
+                        </button>
                     </div>
 
+                    {/* Nav — full-width equal tabs on mobile, compact inline on desktop */}
                     <nav className="flex items-center gap-1">
                         <NavLink
                             to="/admin/videos"
                             className={({ isActive }) =>
-                                `${tabBase} ${isActive ? tabActive : tabIdle}`
+                                `${tabBase} flex-1 justify-center md:flex-none md:justify-start ${
+                                    isActive ? tabActive : tabIdle
+                                }`
                             }
                         >
                             <Video size={18} />
@@ -55,7 +70,9 @@ export function AdminLayout() {
                         <NavLink
                             to="/admin/users"
                             className={({ isActive }) =>
-                                `${tabBase} ${isActive ? tabActive : tabIdle}`
+                                `${tabBase} flex-1 justify-center md:flex-none md:justify-start ${
+                                    isActive ? tabActive : tabIdle
+                                }`
                             }
                         >
                             <Users size={18} />
@@ -63,9 +80,10 @@ export function AdminLayout() {
                         </NavLink>
                     </nav>
 
-                    <div className="flex items-center gap-3">
+                    {/* Desktop-only right group: user name + logout */}
+                    <div className="hidden items-center gap-3 md:flex">
                         {user && (
-                            <span className="hidden text-sm text-white/50 sm:inline">
+                            <span className="text-sm text-white/50">
                                 {user.first_name} {user.last_name}
                             </span>
                         )}
@@ -80,7 +98,7 @@ export function AdminLayout() {
                 </div>
             </header>
 
-            <main className="mx-auto px-8 w-full py-8">
+            <main className="mx-auto w-full px-4 py-8 md:px-8">
                 <Outlet />
             </main>
         </div>
