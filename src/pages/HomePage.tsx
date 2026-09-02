@@ -5,6 +5,7 @@ import { Pagination } from '../components/common/Pagination';
 import { SearchBar } from '../components/common/SearchBar';
 import Tab from '../components/common/Tab';
 import { Feed } from '../components/home/Feed';
+import { LevelChip } from '../components/home/LevelChip';
 import { RecommendedFeed } from '../components/home/RecommendedFeed';
 import type { RecommendationSection } from '../types/recommendation';
 import { EstimatedLevelValues, type EstimatedLevel, type Video } from '../types/user';
@@ -17,7 +18,7 @@ const TABS = [
 ];
 
 function HomePage() {
-    const { user } = useAuth();
+    const { user, isAuthenticated } = useAuth();
     const [activeTab, setActiveTab] = useState<HomeTab>('feed');
 
     // --- Your Feed ---
@@ -32,6 +33,9 @@ function HomePage() {
     const [recSections, setRecSections] = useState<RecommendationSection[]>([]);
     const [recColdStart, setRecColdStart] = useState(false);
     const [recLoading, setRecLoading] = useState(false);
+    // Distinguishes "haven't fetched yet" from "fetched and got an empty feed",
+    // so we can show a spinner until real data arrives instead of a stale empty state.
+    const [recFetched, setRecFetched] = useState(false);
     const [level, setLevel] = useState<EstimatedLevel>(
         user?.estimated_level ?? EstimatedLevelValues.Beginner,
     );
@@ -59,31 +63,41 @@ function HomePage() {
     }, [page, searchQuery, difficultyFilter]);
 
     useEffect(() => {
+        console.log('[rec] effect run — activeTab:', activeTab,
+            '| isAuthenticated:', isAuthenticated,
+            '| hasToken:', !!localStorage.getItem('accessToken'));
         if (activeTab !== 'recommended') return;
         let cancelled = false;
         const fetchRecommendations = async () => {
+            console.log('[rec] → GET /video/recommendation');
             setRecLoading(true);
             try {
                 const data = await getRecommendations();
                 if (cancelled) return;
+                console.log('[rec] ✓ success — sections:', data.sections?.length, '| cold:', data.is_cold_start);
                 setRecSections(data.sections);
                 setRecColdStart(data.is_cold_start);
                 // Keep the header chip in sync with the level the backend scored against.
                 if (data.user_level) setLevel(data.user_level);
             } catch (error) {
                 if (cancelled) return;
-                console.error('Error fetching recommendations:', error);
+                const status = (error as { response?: { status?: number } })?.response?.status;
+                const message = (error as { message?: string })?.message;
+                console.error('[rec] ✗ failed — status:', status, '| message:', message);
                 setRecSections([]);
                 setRecColdStart(false);
             } finally {
-                if (!cancelled) setRecLoading(false);
+                if (!cancelled) {
+                    setRecLoading(false);
+                    setRecFetched(true);
+                }
             }
         };
         fetchRecommendations();
         return () => {
             cancelled = true;
         };
-    }, [activeTab]);
+    }, [activeTab, isAuthenticated]);
 
     const handleSearch = async (query: string) => {
         setSearchQuery(query);
@@ -96,7 +110,7 @@ function HomePage() {
             <Tab
                 titles={TABS}
                 activeTab={activeTab}
-                onClick={(id) => setActiveTab(id as HomeTab)}
+                onClick={(id) => { console.log('[rec] tab clicked:', id); setActiveTab(id as HomeTab); }}
                 className="max-w-md"
             />
 
@@ -109,15 +123,15 @@ function HomePage() {
             ) : (
                     <>
                         {/* Not necessary for now */}
-                    {/* <div className="mb-2">
+                    <div className="mb-2">
                         <LevelChip level={level} />
-                    </div> */}
-                    {recLoading ? (
+                    </div>
+                    {recLoading || !recFetched ? (
                         <div className="mt-6 flex justify-center py-12">
                             <div className="h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-teal-500" />
                         </div>
                     ) : (
-                        <RecommendedFeed sections={recSections} isColdStart={recColdStart} />
+                        <RecommendedFeed sections={recSections} isColdStart={recColdStart} isAuthenticated={isAuthenticated} />
                     )}
                 </>
             )}
