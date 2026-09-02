@@ -1,21 +1,39 @@
 // components/Sidebar/Sidebar.tsx
-import { Home, LayoutDashboardIcon, Library, LogIn, LucideBookOpen, Shield, Upload, User } from 'lucide-react'
-import { NavLink } from 'react-router-dom'
+import {
+    ChevronLeft,
+    ChevronRight,
+    Home,
+    LayoutDashboardIcon,
+    Library,
+    LogIn,
+    LucideBookOpen,
+    MoreHorizontal,
+    Shield,
+    Upload,
+    User,
+} from 'lucide-react'
+import { useState } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../authContext'
+import BottomSheet from '../videoPlayer/BottomSheet'
 
 interface SidebarItem {
     icon: React.ReactNode
     label: string
+    // Compact label for the cramped mobile bottom bar (falls back to `label`).
+    shortLabel?: string
     to: string
+    // Primary items live in the mobile bottom bar; the rest go to the "More" sheet.
+    primary?: boolean
 }
 
 function useNavItems(): SidebarItem[] {
-    const {isAuthenticated, user} = useAuth()
+    const { isAuthenticated, user } = useAuth()
     return [
-        { icon: <Home size={20} />, label: 'Home', to: '/' },
-        { icon: <LayoutDashboardIcon size={20} />, label: 'Dashboard', to: '/dashboard' },
-        { icon: <Library size={20} />, label: 'Library', to: '/library' },
-        { icon: <LucideBookOpen size={20} />, label: 'Vocabulary Review', to: '/review' },
+        { icon: <Home size={20} />, label: 'Home', to: '/', primary: true },
+        { icon: <LayoutDashboardIcon size={20} />, label: 'Dashboard', to: '/dashboard', primary: true },
+        { icon: <Library size={20} />, label: 'Library', to: '/library', primary: true },
+        { icon: <LucideBookOpen size={20} />, label: 'Vocabulary Review', shortLabel: 'Review', to: '/review', primary: true },
         { icon: <Upload size={20} />, label: 'Submit', to: '/submit' },
         // Only admins see the console link — hidden from learners and anon users.
         ...(user?.role === 'ADMIN'
@@ -29,55 +47,133 @@ function useNavItems(): SidebarItem[] {
     ]
 }
 
-const base = 'flex items-center justify-center rounded-lg transition-all'
+const base = 'flex items-center rounded-lg transition-all'
 const active = 'bg-teal-600/15 text-teal-500'
 const idle = 'text-white/60 hover:bg-white/5 hover:text-white/90'
 
-export function Sidebar() {
+interface SidebarProps {
+    expanded: boolean
+    onToggle: () => void
+}
+
+export function Sidebar({ expanded, onToggle }: SidebarProps) {
     const navItems = useNavItems()
+    const primaryItems = navItems.filter((item) => item.primary)
+    const moreItems = navItems.filter((item) => !item.primary)
+    const [moreOpen, setMoreOpen] = useState(false)
+    const { pathname } = useLocation()
+    // Highlight the "More" tab when the active route lives inside the sheet.
+    const moreActive = moreItems.some((item) => pathname === item.to || pathname.startsWith(`${item.to}/`))
 
     return (
         <>
-            {/* Desktop: left icon rail */}
-            <aside className="fixed left-0 top-0 z-50 hidden h-screen w-16 flex-col items-center border-r border-white/5 bg-[#0a1628] py-4 md:flex">
-                <div className="mb-8">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-600 text-lg font-bold text-white">
+            {/* Desktop: collapsible left rail */}
+            <aside
+                className={`fixed left-0 top-0 z-50 hidden h-screen flex-col border-r border-white/5 bg-[#0a1628] py-4 transition-[width] duration-200 md:flex ${
+                    expanded ? 'w-56' : 'w-16'
+                }`}
+            >
+                {/* Brand */}
+                <div className={`mb-8 flex items-center ${expanded ? 'gap-2 px-3' : 'justify-center'}`}>
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-600 text-lg font-bold text-white">
                         I
                     </div>
+                    {expanded && <span className="text-lg font-semibold text-white">Immersio</span>}
                 </div>
-                <nav className="flex w-full flex-1 flex-col items-center gap-1">
+
+                {/* Nav */}
+                <nav className={`flex w-full flex-1 flex-col gap-1 ${expanded ? 'px-2' : 'items-center'}`}>
                     {navItems.map((item) => (
                         <NavLink
                             key={item.to}
                             to={item.to}
+                            end={item.to === '/'}
                             title={item.label}
                             className={({ isActive }) =>
-                                `${base} h-10 w-10 ${isActive ? active : idle}`
+                                `${base} h-10 ${
+                                    expanded ? 'w-full justify-start gap-3 px-3' : 'w-10 justify-center'
+                                } ${isActive ? active : idle}`
                             }
                         >
-                            {item.icon}
+                            <span className="shrink-0">{item.icon}</span>
+                            {expanded && <span className="truncate text-sm">{item.label}</span>}
                         </NavLink>
                     ))}
                 </nav>
+
+                {/* Collapse toggle */}
+                <div className={`mt-2 flex ${expanded ? 'px-2' : 'justify-center'}`}>
+                    <button
+                        type="button"
+                        onClick={onToggle}
+                        title={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
+                        aria-label={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
+                        aria-expanded={expanded}
+                        className={`${base} h-10 ${
+                            expanded ? 'w-full justify-start gap-3 px-3' : 'w-10 justify-center'
+                        } ${idle}`}
+                    >
+                        <span className="shrink-0">
+                            {expanded ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+                        </span>
+                        {expanded && <span className="text-sm">Collapse</span>}
+                    </button>
+                </div>
             </aside>
 
-            {/* Mobile: bottom tab bar */}
-            <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-stretch justify-around border-t border-white/5 bg-[#0a1628] md:hidden">
-                {navItems.map((item) => (
+            {/* Mobile: bottom tab bar — 4 primary destinations + a "More" overflow */}
+            <nav className="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-stretch justify-around border-t border-white/5 bg-[#0a1628] md:hidden">
+                {primaryItems.map((item) => (
                     <NavLink
                         key={item.to}
                         to={item.to}
+                        end={item.to === '/'}
                         className={({ isActive }) =>
-                            `${base} flex-1 flex-col gap-0.5 text-[11px] ${
+                            `${base} flex-1 flex-col justify-center gap-0.5 text-[11px] ${
                                 isActive ? 'text-teal-500' : 'text-white/60'
                             }`
                         }
                     >
                         {item.icon}
-                        <span>{item.label}</span>
+                        <span>{item.shortLabel ?? item.label}</span>
                     </NavLink>
                 ))}
+                <button
+                    type="button"
+                    onClick={() => setMoreOpen(true)}
+                    aria-label="More navigation"
+                    className={`${base} flex-1 flex-col justify-center gap-0.5 text-[11px] ${
+                        moreActive ? 'text-teal-500' : 'text-white/60'
+                    }`}
+                >
+                    <MoreHorizontal size={20} />
+                    <span>More</span>
+                </button>
             </nav>
+
+            {/* Mobile: overflow sheet for the non-primary destinations */}
+            <BottomSheet isOpen={moreOpen} onClose={() => setMoreOpen(false)}>
+                <div className="px-4 pb-8 pt-1">
+                    <p className="mb-1 px-2 text-xs font-semibold uppercase tracking-wider text-white/40">More</p>
+                    <div className="flex flex-col">
+                        {moreItems.map((item) => (
+                            <NavLink
+                                key={item.to}
+                                to={item.to}
+                                onClick={() => setMoreOpen(false)}
+                                className={({ isActive }) =>
+                                    `flex items-center gap-3 rounded-lg px-3 py-3 text-sm ${
+                                        isActive ? active : 'text-white/80 hover:bg-white/5'
+                                    }`
+                                }
+                            >
+                                {item.icon}
+                                <span>{item.label}</span>
+                            </NavLink>
+                        ))}
+                    </div>
+                </div>
+            </BottomSheet>
         </>
     )
 }
