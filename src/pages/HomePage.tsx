@@ -5,7 +5,6 @@ import { Pagination } from '../components/common/Pagination';
 import { SearchBar } from '../components/common/SearchBar';
 import Tab from '../components/common/Tab';
 import { Feed } from '../components/home/Feed';
-import { LevelChip } from '../components/home/LevelChip';
 import { RecommendedFeed } from '../components/home/RecommendedFeed';
 import type { RecommendationSection } from '../types/recommendation';
 import { EstimatedLevelValues, type EstimatedLevel, type Video } from '../types/user';
@@ -33,7 +32,6 @@ function HomePage() {
     const [recSections, setRecSections] = useState<RecommendationSection[]>([]);
     const [recColdStart, setRecColdStart] = useState(false);
     const [recLoading, setRecLoading] = useState(false);
-    const [recRefreshKey, setRecRefreshKey] = useState(0);
     const [level, setLevel] = useState<EstimatedLevel>(
         user?.estimated_level ?? EstimatedLevelValues.Beginner,
     );
@@ -85,16 +83,10 @@ function HomePage() {
         return () => {
             cancelled = true;
         };
-    }, [activeTab, recRefreshKey]);
+    }, [activeTab]);
 
     const handleSearch = async (query: string) => {
         setSearchQuery(query);
-    };
-
-    const handleLevelChange = (newLevel: EstimatedLevel) => {
-        setLevel(newLevel);
-        // Bump the key so the feed refetches with the updated level.
-        setRecRefreshKey((k) => k + 1);
     };
 
     return (
@@ -115,10 +107,11 @@ function HomePage() {
                     <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
                 </>
             ) : (
-                <>
-                    <div className="mb-2">
-                        <LevelChip level={level} onLevelChange={handleLevelChange} />
-                    </div>
+                    <>
+                        {/* Not necessary for now */}
+                    {/* <div className="mb-2">
+                        <LevelChip level={level} />
+                    </div> */}
                     {recLoading ? (
                         <div className="mt-6 flex justify-center py-12">
                             <div className="h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-teal-500" />
