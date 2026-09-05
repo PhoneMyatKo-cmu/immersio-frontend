@@ -98,7 +98,7 @@ function DashboardPage() {
     // change box color to more calm tone and slightly transparent and add a border to each box, and add a hover effect that slightly enlarges the box and changes the background color to a lighter shade of the original color.
     return (
         <div>
-            <h1 className="text-4xl font-bold text-white p-4">Dashboard</h1>
+            <h1 className="text-4xl font-bold text-white p-4">Progress</h1>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
                 {statistics ? (

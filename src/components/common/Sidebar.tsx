@@ -31,7 +31,7 @@ function useNavItems(): SidebarItem[] {
     const { isAuthenticated, user } = useAuth()
     return [
         { icon: <Home size={20} />, label: 'Home', to: '/', primary: true },
-        { icon: <LayoutDashboardIcon size={20} />, label: 'Dashboard', to: '/dashboard', primary: true },
+        { icon: <LayoutDashboardIcon size={20} />, label: 'Progress', to: '/dashboard', primary: true },
         { icon: <Library size={20} />, label: 'Library', to: '/library', primary: true },
         { icon: <LucideBookOpen size={20} />, label: 'Vocabulary Review', shortLabel: 'Review', to: '/review', primary: true },
         { icon: <Upload size={20} />, label: 'Submit', to: '/submit' },
