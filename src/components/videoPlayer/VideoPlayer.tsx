@@ -244,10 +244,11 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
         const up = () => { 
             if (isDragging.current && previewPct !== null) {
                 seekTo((previewPct / 100) * duration)   // single real seek
+                playerRef.current?.playVideo() //  fixed bug
             }
             isDragging.current = false
             setPreviewPct(null)
-            playerRef.current?.playVideo()
+            
         }
         const move = (e: MouseEvent) => {
             if (!isDragging.current || !progressRef.current) return

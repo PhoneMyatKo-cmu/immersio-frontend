@@ -8,7 +8,8 @@ interface RecommendedFeedProps {
     isAuthenticated?:boolean
 }
 
-export function RecommendedFeed({ sections, isColdStart = false,isAuthenticated }: RecommendedFeedProps) {
+export function RecommendedFeed({ sections, isColdStart = false, isAuthenticated }: RecommendedFeedProps) {
+    console.log("Recommended items",sections)
     if (!isAuthenticated) {
         return (
             <div className="mt-6 flex flex-col items-center justify-center py-12 text-center">
