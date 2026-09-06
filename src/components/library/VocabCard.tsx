@@ -16,7 +16,7 @@ const srsPill: Record<SRSState, { label: string; className: string }> = {
 
 const statusLabel: Record<Vocab["status"], string> = {
     SEEN: "Seen while watching",
-    KNOW: "Known",
+    KNOW: "Repeatedly encountered while watching",
 };
 
 function formatDue(date: Date | string): { text: string; urgent: boolean } {

@@ -29,3 +29,6 @@ test.ts
 src/components/videoPlayer/shadowingMockResults.ts
 CLAUDE.md
 AdminAPI.md
+MEMORY.md
+memory/dashboard-design-direction.md
+memory/lookup-sidebar-design-direction.md
