@@ -1,50 +1,31 @@
+import { BookOpen } from "lucide-react";
 import type { SavedVocab, Vocab } from "../../types/vocab";
 import VocabCard from "./VocabCard";
 
 interface VocabListProps {
     vocabItems: Vocab[] | SavedVocab[] | null;
-    headers: { [key: string]: string };
     showRemove?: boolean;
     onRemove?: (vocabId: number) => void;
+    emptyMessage?: string;
 }
 
-export function VocabList({ vocabItems, headers, showRemove, onRemove }: VocabListProps) {
-    return (
-        <div className="flex flex-col items-center justify-start min-h-screen w-full">
-            <div className="w-full">
-                <div className="flex flex-row gap-0.5 p-4 bg-gray-800 text-white rounded-t-lg sticky top-25 z-50">
-                    <div className="flex flex-col w-10 shrink-0 items-center justify-center">
-                        <p className="flex font-bold">#</p>
-                    </div>
-                    {Object.entries(headers).map(([header, key]) => (
-                        <div key={key} className="flex flex-col flex-1 items-center justify-center">
-                            <p className="flex font-bold">{header}</p>
-                        </div>
-                    ))}
-                    {showRemove && (
-                        <div className="flex flex-col w-28 shrink-0 items-center justify-center">
-                            <p className="flex font-bold">Actions</p>
-                        </div>
-                    )}
+export function VocabList({ vocabItems, showRemove, onRemove, emptyMessage = "No vocabulary here yet." }: VocabListProps) {
+    if (vocabItems && vocabItems.length === 0) {
+        return (
+            <div className="flex w-full flex-col items-center justify-center gap-3 py-16 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/5">
+                    <BookOpen className="text-white/30" size={26} />
                 </div>
-
-                {vocabItems && vocabItems.map((vocab, index) => (
-                    <VocabCard
-                        key={vocab.vocab_id}
-                        vocab={vocab}
-                        headers={headers}
-                        rowNumber={index + 1}
-                        showRemove={showRemove}
-                        onRemove={onRemove}
-                    />
-                ))}
-
-                {vocabItems && vocabItems.length === 0 && (
-                    <div className="flex flex-col items-center justify-center p-4 bg-gray-700 rounded-b-lg">
-                        <p className="text-white">No vocabulary items found.</p>
-                    </div>
-                )}
+                <p className="max-w-sm text-sm text-white/60">{emptyMessage}</p>
             </div>
+        );
+    }
+
+    return (
+        <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {vocabItems?.map((vocab) => (
+                <VocabCard key={vocab.vocab_id} vocab={vocab} showRemove={showRemove} onRemove={onRemove} />
+            ))}
         </div>
     );
 }

@@ -7,26 +7,30 @@ import Tab from "../components/common/Tab";
 import { VocabList } from "../components/library/VocabList";
 import type { SavedVocab, Vocab } from "../types/vocab";
 
-function LibraryPage() {
+const TABS = [
+    { title: "Saved", id: "vocab_saved" },
+    { title: "Seen", id: "vocab_seen" },
+    { title: "Known", id: "vocab_known" },
+];
 
+const EMPTY_MESSAGES: Record<string, string> = {
+    vocab_saved: "No saved words yet — tap the bookmark on words while watching to save them.",
+    vocab_seen: "No words seen yet — start watching to build your vocabulary.",
+    vocab_known: "No known words yet — words you've mastered will show up here.",
+};
+
+function LibraryPage() {
     const { user, isAuthenticated, loading } = useAuth();
     const navigate = useNavigate();
 
-    const tabs = [
-        { title: 'Saved', id: 'vocab_saved', 'headers': {'Word': 'japanese_form', 'Definition': 'meanings', 'SRS State': 'srs_state', 'Next Review': 'next_review_date'}},
-        { title: 'Seen', id: 'vocab_seen', 'headers': {'Word': 'japanese_form', 'Definition': 'meanings'}},
-        { title: 'Known', id: 'vocab_known', 'headers': {'Word': 'japanese_form', 'Definition': 'meanings'}},
-    ]
-    const [activeTab, setActiveTab] = useState(tabs[0].id);
+    const [activeTab, setActiveTab] = useState(TABS[0].id);
     const [vocabSeenData, setVocabSeenData] = useState<Vocab[] | null>(null);
     const [vocabKnownData, setVocabKnownData] = useState<Vocab[] | null>(null);
     const [savedVocabData, setSavedVocabData] = useState<SavedVocab[] | null>(null);
-
-    const handleTabChange = (tabId: string) => {
-        setActiveTab(tabId);
-    };
+    const [removeTarget, setRemoveTarget] = useState<number | null>(null);
 
     const handleRemoveSaved = (vocabId: number) => {
+        if (!user) return;
         userVocabApi.removeSavedVocab(user.id, vocabId).then(() => {
             setSavedVocabData((prev) => prev && prev.filter((vocab) => vocab.vocab_id !== vocabId));
         }).catch((error) => {
@@ -56,31 +60,72 @@ function LibraryPage() {
     }
 
     if (!isAuthenticated) {
-        return         <>
+        return (
             <Modal
                 isOpen={true}
                 onClose={() => navigate("/")}
                 message="Log in to access this feature."
                 title="Log In Required!"
                 confirmText="Log In"
-                onConfirm={() => {
-                    navigate("/login")
-                }}
+                onConfirm={() => navigate("/login")}
                 closeOnConfirm={false}
             />
-        </>
+        );
     }
-    console.log("Saved Vocab Data:", savedVocabData);
+
+    const counts: Record<string, number | undefined> = {
+        vocab_saved: savedVocabData?.length,
+        vocab_seen: vocabSeenData?.length,
+        vocab_known: vocabKnownData?.length,
+    };
+    const tabTitles = TABS.map((t) => ({
+        id: t.id,
+        title: counts[t.id] != null ? `${t.title} (${counts[t.id]})` : t.title,
+    }));
+
+    const removeWord = savedVocabData?.find((v) => v.vocab_id === removeTarget);
+
     return (
-        <div className="p-4 flex flex-col items-center justify-start min-h-screen w-full">
-            <div className="sticky top-0 z-100 h-25 p-4 bg-darkgrey rounded-lg shadow-md w-full">
-                <h1 className=" sm:text-lg md:text-xl text-2xl font-bold mb-4 text-white">Vocabulary Library</h1>
-                <Tab className="flex w-full" titles={tabs} activeTab={activeTab} onClick={handleTabChange} />
-                
+        <div className="min-h-screen w-full p-4 md:p-6">
+            <div className="sticky top-0 z-20 -mx-4 mb-4 border-b border-white/5 bg-[#0a1628]/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
+                <h1 className="mb-3 text-2xl font-bold text-white">Vocabulary Library</h1>
+                <Tab className="max-w-md" titles={tabTitles} activeTab={activeTab} onClick={setActiveTab} />
             </div>
-            {activeTab === 'vocab_saved' && savedVocabData && <VocabList vocabItems={savedVocabData} headers={tabs[0].headers} showRemove onRemove={handleRemoveSaved} />}
-            {activeTab === 'vocab_seen' && vocabSeenData && <VocabList vocabItems={vocabSeenData} headers={tabs[1].headers} />}
-            {activeTab === 'vocab_known' && vocabKnownData && <VocabList vocabItems={vocabKnownData} headers={tabs[2].headers} />}
+
+            {activeTab === "vocab_saved" && savedVocabData && (
+                <VocabList
+                    vocabItems={savedVocabData}
+                    showRemove
+                    onRemove={(id) => setRemoveTarget(id)}
+                    emptyMessage={EMPTY_MESSAGES.vocab_saved}
+                />
+            )}
+            {activeTab === "vocab_seen" && vocabSeenData && (
+                <VocabList vocabItems={vocabSeenData} emptyMessage={EMPTY_MESSAGES.vocab_seen} />
+            )}
+            {activeTab === "vocab_known" && vocabKnownData && (
+                <VocabList vocabItems={vocabKnownData} emptyMessage={EMPTY_MESSAGES.vocab_known} />
+            )}
+
+            <Modal
+                isOpen={removeTarget !== null}
+                onClose={() => setRemoveTarget(null)}
+                title="Remove word?"
+                message={
+                    removeWord
+                        ? `Remove "${removeWord.japanese_form}" from your saved words?`
+                        : "Remove this word from your saved words?"
+                }
+                variant="warning"
+                confirmText="Remove"
+                confirmTone="danger"
+                cancelRequired
+                closeOnConfirm={false}
+                onConfirm={() => {
+                    if (removeTarget !== null) handleRemoveSaved(removeTarget);
+                    setRemoveTarget(null);
+                }}
+            />
         </div>
     );
 }

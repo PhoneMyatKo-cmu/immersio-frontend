@@ -47,11 +47,11 @@ function ExampleCard({
                     : example.japanese
                 }
             </p>
-            {example.reading && (
+            {/* {example.reading && (
                 <p className="text-[11px] text-white/35 font-japanese mb-1">
                     {example.reading}
                 </p>
-            )}
+            )} */}
             <p className="text-xs text-white/45 leading-relaxed border-t border-white/6 pt-1.5 mt-1">
                 {example.english}
             </p>

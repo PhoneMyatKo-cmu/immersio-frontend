@@ -30,36 +30,38 @@ function ReviewPage() {
     }
 
     return (
-        <div className="p-4 flex flex-col items-center justify-start min-h-screen w-full">
-            <h1 className="text-2xl font-bold mb-4 text-white">Vocabulary Review</h1>
+        <div className="flex min-h-screen w-full flex-col p-4 md:p-6">
+            <h1 className="mb-4 text-2xl font-bold text-white">Vocabulary Review</h1>
 
-            {session.state === "loading" && null}
+            <div className="flex flex-1 flex-col items-center justify-center">
+                {session.state === "loading" && null}
 
-            {session.state === "config" && (
-                <ReviewConfig dueCount={session.dueVocab.length} onStart={session.startSession} />
-            )}
+                {session.state === "config" && (
+                    <ReviewConfig dueCount={session.dueVocab.length} onStart={session.startSession} />
+                )}
 
-            {(session.state === "in-progress") && session.sessionQueue[session.currentIndex] && (
-                <ReviewCard
-                    vocab={session.sessionQueue[session.currentIndex]}
-                    index={session.currentIndex}
-                    total={session.sessionQueue.length}
-                    isRevealed={session.isRevealed}
-                    onReveal={session.reveal}
-                    onGrade={session.grade}
-                />
-            )}
+                {(session.state === "in-progress") && session.sessionQueue[session.currentIndex] && (
+                    <ReviewCard
+                        vocab={session.sessionQueue[session.currentIndex]}
+                        index={session.currentIndex}
+                        total={session.sessionQueue.length}
+                        isRevealed={session.isRevealed}
+                        onReveal={session.reveal}
+                        onGrade={session.grade}
+                    />
+                )}
 
-            {(session.state === "submitting" || session.state === "summary") && (
-                <ReviewSummary
-                    total={session.sessionQueue.length}
-                    gradeCounts={session.gradeCounts}
-                    submitResult={session.submitResult}
-                    isSubmitting={session.state === "submitting"}
-                    onRetryFailed={session.retryFailed}
-                    onDone={() => navigate("/library")}
-                />
-            )}
+                {(session.state === "submitting" || session.state === "summary") && (
+                    <ReviewSummary
+                        total={session.sessionQueue.length}
+                        gradeCounts={session.gradeCounts}
+                        submitResult={session.submitResult}
+                        isSubmitting={session.state === "submitting"}
+                        onRetryFailed={session.retryFailed}
+                        onDone={() => navigate("/library")}
+                    />
+                )}
+            </div>
         </div>
     );
 }
