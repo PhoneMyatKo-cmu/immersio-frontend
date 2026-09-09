@@ -1,3 +1,4 @@
+import { Bookmark, Clock, Eye, Flame, GraduationCap, Video } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getChartData, getDashboardStatistics } from "../api/dashboard";
@@ -95,50 +96,55 @@ function DashboardPage() {
             />
         </>
     }
-    // change box color to more calm tone and slightly transparent and add a border to each box, and add a hover effect that slightly enlarges the box and changes the background color to a lighter shade of the original color.
     return (
-        <div>
-            <h1 className="text-4xl font-bold text-white p-4">Progress</h1>
+        <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-6">
+            <h1 className="mb-6 text-3xl font-bold text-white">Progress</h1>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {statistics ? (
                     <>
                         <StatisticsBox
                             title="Study Time"
                             value={statistics.study_seconds}
-                            bgColor="bg-sky-400/75"
+                            icon={<Clock size={18} />}
+                            accent="text-sky-400"
                         />
                         <StatisticsBox
                             title="Videos Watched"
                             value={statistics.total_videos_watched}
-                            bgColor="bg-emerald-400/75"
+                            icon={<Video size={18} />}
+                            accent="text-emerald-400"
                         />
                         <StatisticsBox
                             title="Streak Days"
                             value={statistics.streak}
-                            bgColor="bg-rose-500/75"
+                            icon={<Flame size={18} />}
+                            accent="text-rose-400"
                         />
                         <StatisticsBox
                             title="Vocabulary Seen"
                             value={statistics.total_vocab_seen}
-                            bgColor="bg-amber-500/75"
+                            icon={<Eye size={18} />}
+                            accent="text-amber-400"
                         />
                         <StatisticsBox
                             title="Vocabulary Known"
                             value={statistics.total_vocab_known}
-                            bgColor="bg-violet-500/75"
+                            icon={<GraduationCap size={18} />}
+                            accent="text-violet-400"
                         />
                         <StatisticsBox
                             title="Vocabulary Saved"
                             value={savedVocabCount ?? 0}
-                            bgColor="bg-teal-500/75"
+                            icon={<Bookmark size={18} />}
+                            accent="text-teal-400"
                         />
                     </>
                 ) : (
-                    <p>Loading statistics...</p>
+                    <p className="col-span-full py-8 text-center text-white/40">Loading statistics...</p>
                 )}
             </div>
-            <div className="p-4">
+            <div className="mt-6">
                 {dashboardChartData ? (
                     <Chart
                     data={dashboardChartData}

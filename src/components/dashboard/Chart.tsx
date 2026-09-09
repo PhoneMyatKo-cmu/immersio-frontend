@@ -9,6 +9,13 @@ export type ChartVariant = 'study_seconds' | 'videos_watched' | 'vocab' | 'srs_s
 
 export type SrsStateDatum = { name: string; value: number };
 
+// Shared styling to lift the charts out of the raw Recharts default look.
+const AXIS_TICK = { fill: 'rgba(255,255,255,0.4)', fontSize: 12 };
+const TOOLTIP_STYLE = { background: '#101c30', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8 };
+const TOOLTIP_LABEL_STYLE = { color: 'rgba(255,255,255,0.6)' };
+const TOOLTIP_CURSOR = { fill: 'rgba(255,255,255,0.05)' };
+const LEGEND_STYLE = { color: 'rgba(255,255,255,0.6)', fontSize: 12 };
+
 interface ChartProps {
     data: DashboardChartData;
     variant: ChartVariant;
@@ -96,14 +103,11 @@ function Chart(props: ChartProps) {
         }
     };
 
-    console.log('Charts:', charts);
-    console.log('Combined Chart Data:', combinedChartData);
-
     return (
-        <div className="bg-gray-800 p-4 rounded-lg shadow-md">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
 
-            <Tab 
-                className="flex space-x-2 mb-4 justify-around text-xl font-semibold w-full"
+            <Tab
+                className="flex space-x-2 mb-4 justify-around text-sm sm:text-lg md:text-xl font-semibold w-full"
                 titles={chartVariants.map((variant) => ({
                     title: chartVariantConfig[variant].title,
                     id: variant
@@ -113,9 +117,9 @@ function Chart(props: ChartProps) {
             />
 
             {props.variant !== 'srs_state' && (
-                <div className="flex justify-between items-center mb-4">
+                <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <Tab
-                        className="flex space-x-2 mb-4 text-md w-[40%]"
+                        className="flex space-x-2 text-md w-full sm:w-[45%]"
                         titles={periods.map((period) => ({
                             title: chartPeriodConfig[period].title,
                             id: period
@@ -125,7 +129,7 @@ function Chart(props: ChartProps) {
                     />
 
                     <Tab
-                        className="flex space-x-2 mb-4 text-md w-[25%]"
+                        className="flex space-x-2 text-md w-full sm:w-[40%]"
                         titles={[
                             { title: 'Daily', id: 'daily' },
                             { title: 'Cumulative', id: 'cumulative' }
@@ -151,14 +155,17 @@ function Chart(props: ChartProps) {
                                     data={props.srsStateData}
                                     dataKey="value"
                                     nameKey="name"
-                                    label
+                                    innerRadius={64}
+                                    outerRadius={96}
+                                    paddingAngle={2}
+                                    stroke="none"
                                 >
                                     {props.srsStateData.map((entry, index) => (
-                                        <Cell key={entry.name} fill={config.color ? config.color[index] : '#8884d8'} />
+                                        <Cell key={entry.name} fill={config.color ? config.color[index] : '#13b7a5'} />
                                     ))}
                                 </Pie>
-                                <Tooltip />
-                                <Legend />
+                                <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={{ color: '#fff' }} />
+                                <Legend wrapperStyle={LEGEND_STYLE} />
                             </PieChart>
                         </ResponsiveContainer>
                     )
@@ -167,51 +174,57 @@ function Chart(props: ChartProps) {
                     {
                         lineType === 'line' ? (
                             <AreaChart data={combinedChartData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="date" />
+                                <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.06)" />
+                                <XAxis dataKey="date" tick={AXIS_TICK} axisLine={false} tickLine={false} />
                                 {props.variant === 'study_seconds' ? (
-                                        <YAxis tickFormatter={formatTime} />
+                                        <YAxis tickFormatter={formatTime} tick={AXIS_TICK} axisLine={false} tickLine={false} width={48} />
                                     ) : (
-                                        <YAxis />
+                                        <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} width={40} />
                                     )
                                 }
                                 {props.variant === 'study_seconds' ? (
-                                    <Tooltip formatter={(value: number) => formatTime(value)} />
+                                    <Tooltip formatter={(value) => formatTime(Number(value))} contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} cursor={TOOLTIP_CURSOR} />
                                 ) : (
-                                    <Tooltip />
+                                    <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} cursor={TOOLTIP_CURSOR} />
                                 )}
-                                <Legend />
+                                <Legend wrapperStyle={LEGEND_STYLE} />
                                 {charts.map((chart) => {
                                     if (chart == 'videos_watched') {
                                         return null; // Skip rendering this chart if it's videos_watched
                                     }
                                     return (
-                                    <Area 
-                                    key={chart} 
-                                    type="monotone" 
-                                    dataKey={chart} 
+                                    <Area
+                                    key={chart}
+                                    type="monotone"
+                                    dataKey={chart}
                                     name={config.legend ? config.legend[charts.indexOf(chart)] : chartVariantConfig[props.variant].title}
-                                    stroke={config.color ? config.color[charts.indexOf(chart)] : '#8884d8'}
-                                    fill={config.color ? config.color[charts.indexOf(chart)] : '#8884d8'}
+                                    stroke={config.color ? config.color[charts.indexOf(chart)] : '#13b7a5'}
+                                    fill={config.color ? config.color[charts.indexOf(chart)] : '#13b7a5'}
+                                    strokeWidth={2}
+                                    fillOpacity={0.18}
+                                    dot={false}
+                                    activeDot={{ r: 4 }}
                                     />
                                 )})}
                             </AreaChart>
                         ) : (
                             <BarChart data={combinedChartData}>
-                                <XAxis dataKey="date" />
-                                <YAxis />
-                                <Tooltip />
-                                <Legend />
+                                <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.06)" />
+                                <XAxis dataKey="date" tick={AXIS_TICK} axisLine={false} tickLine={false} />
+                                <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} width={40} />
+                                <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} cursor={TOOLTIP_CURSOR} />
+                                <Legend wrapperStyle={LEGEND_STYLE} />
                                 {charts.map((chart) => {
                                     if (chart == 'total_videos_watched') {
                                         return null; // Skip rendering this chart if it's total_videos_watched
                                     }
                                     return (
-                                        <Bar 
-                                            key={chart} 
-                                            dataKey={chart} 
-                                            fill={config.color ? config.color[charts.indexOf(chart)] : '#8884d8'}
+                                        <Bar
+                                            key={chart}
+                                            dataKey={chart}
+                                            fill={config.color ? config.color[charts.indexOf(chart)] : '#13b7a5'}
                                             name={config.legend ? config.legend[charts.indexOf(chart)] : chartVariantConfig[props.variant].title}
+                                            radius={[4, 4, 0, 0]}
                                         />
                                     );
                                 })}
