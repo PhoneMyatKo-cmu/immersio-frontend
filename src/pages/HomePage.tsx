@@ -5,7 +5,6 @@ import { Pagination } from '../components/common/Pagination';
 import { SearchBar } from '../components/common/SearchBar';
 import Tab from '../components/common/Tab';
 import { Feed } from '../components/home/Feed';
-import { LevelChip } from '../components/home/LevelChip';
 import { RecommendedFeed } from '../components/home/RecommendedFeed';
 import type { RecommendationSection } from '../types/recommendation';
 import { EstimatedLevelValues, type EstimatedLevel, type Video } from '../types/user';
@@ -123,9 +122,9 @@ function HomePage() {
             ) : (
                     <>
                         {/* Not necessary for now */}
-                    <div className="mb-2">
+                    {/* <div className="mb-2">
                         <LevelChip level={level} />
-                    </div>
+                    </div> */}
                     {recLoading || !recFetched ? (
                         <div className="mt-6 flex justify-center py-12">
                             <div className="h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-teal-500" />
