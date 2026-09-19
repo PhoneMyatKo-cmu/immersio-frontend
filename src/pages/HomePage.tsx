@@ -5,6 +5,7 @@ import { Pagination } from '../components/common/Pagination';
 import { SearchBar } from '../components/common/SearchBar';
 import Tab from '../components/common/Tab';
 import { Feed } from '../components/home/Feed';
+import { LevelChip } from '../components/home/LevelChip';
 import { RecommendedFeed } from '../components/home/RecommendedFeed';
 import type { RecommendationSection } from '../types/recommendation';
 import { EstimatedLevelValues, type EstimatedLevel, type Video } from '../types/user';
@@ -74,7 +75,17 @@ function HomePage() {
                 const data = await getRecommendations();
                 if (cancelled) return;
                 console.log('[rec] ✓ success — sections:', data.sections?.length, '| cold:', data.is_cold_start);
-                setRecSections(data.sections);
+const sections = data.is_cold_start
+    ? data.sections.map((s) => ({
+        ...s,
+        // Cold start: the backend's ranking isn't personalized yet, so surface the
+        // videos the learner is most likely to already understand first.
+        items: [...s.items].sort(
+            (a, b) => (b.may_know_percent ?? 0) - (a.may_know_percent ?? 0),
+        ),
+    }))
+    : data.sections;
+                setRecSections(sections);
                 setRecColdStart(data.is_cold_start);
                 // Keep the header chip in sync with the level the backend scored against.
                 if (data.user_level) setLevel(data.user_level);
@@ -122,10 +133,10 @@ function HomePage() {
             ) : (
                     <>
                         {/* Not necessary for now */}
-                    {/* <div className="mb-2">
+                   {recColdStart && <div className="mb-2">
                         <LevelChip level={level} />
-                    </div> */}
-                    {recLoading || !recFetched ? (
+                    </div>
+}                     {recLoading || !recFetched ? (
                         <div className="mt-6 flex justify-center py-12">
                             <div className="h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-teal-500" />
                         </div>
