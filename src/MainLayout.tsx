@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
+import { DemoNotice } from './components/common/DemoNotice';
 import { Sidebar } from './components/common/Sidebar';
 
 const SIDEBAR_KEY = 'sidebar-expanded';
@@ -17,6 +18,7 @@ export function MainLayout() {
 
     return (
         <div className="app-layout">
+            <DemoNotice />
             <Sidebar expanded={expanded} onToggle={toggle} />
             <main
                 className={`pb-16 transition-[margin] duration-200 md:pb-0 ${

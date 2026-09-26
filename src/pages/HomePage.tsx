@@ -45,17 +45,20 @@ function HomePage() {
 
     useEffect(() => {
         const fetchFeedVideos = async () => {
-            let videos: Video[] = [];
-            let total_pages = 0;
+            try {
+                const data = difficultyFilter
+                    ? await getVideosByDifficulty(difficultyFilter, searchQuery, page, VIDEOS_PER_PAGE)
+                    : await getFeedVideos(searchQuery, page, VIDEOS_PER_PAGE);
 
-            if (difficultyFilter) {
-                [videos, total_pages] = await getVideosByDifficulty(difficultyFilter, searchQuery, page, VIDEOS_PER_PAGE);
-            } else {
-                [videos, total_pages] = await getFeedVideos(searchQuery, page, VIDEOS_PER_PAGE);
+                // Guard against non-array responses (e.g. index.html when the API is unreachable)
+                const [videos, total_pages] = Array.isArray(data) ? data : [[], 0];
+                setVideos(Array.isArray(videos) ? videos : []);
+                setTotalPages(typeof total_pages === 'number' ? total_pages : 0);
+            } catch (error) {
+                console.error('Failed to load feed:', error);
+                setVideos([]);
+                setTotalPages(0);
             }
-
-            setVideos(videos);
-            setTotalPages(total_pages);
         };
 
         fetchFeedVideos();
