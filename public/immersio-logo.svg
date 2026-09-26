@@ -1,0 +1,6 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Immersio">
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="#13b7a5"/>
+  <text x="32" y="33" text-anchor="middle" dominant-baseline="central"
+        font-family="'Zen Kaku Gothic New','Noto Sans JP','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo',sans-serif"
+        font-weight="700" font-size="40" fill="#04241f">イ</text>
+</svg>

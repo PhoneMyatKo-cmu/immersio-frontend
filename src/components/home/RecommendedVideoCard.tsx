@@ -72,10 +72,12 @@ export function RecommendedVideoCard({ rec, showDifficulty = false, isColdStart 
                             <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${badge.className}`}>
                                 {badge.label}
                             </span>
-                        )}
-                        <span className="rounded-full bg-teal-500/15 px-2.5 py-1 text-xs font-medium text-teal-300">
+                            )}
+                            {newWords > 0 && <span className="rounded-full bg-teal-500/15 px-2.5 py-1 text-xs font-medium text-teal-300">
                             {newWords} new word{newWords === 1 ? "" : "s"}
                         </span>
+                        }
+                        
                         {reviewWords > 0 && (
                             <span className="rounded-full bg-blue-500/15 px-2.5 py-1 text-xs font-medium text-blue-300">
                                 Reviews {reviewWords} word{reviewWords === 1 ? "" : "s"} you're studying

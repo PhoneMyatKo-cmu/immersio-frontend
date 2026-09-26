@@ -144,7 +144,7 @@ function DashboardPage() {
                             accent="text-emerald-400"
                         />
                         <StatisticsBox
-                            title="Vocabulary Seen"
+                            title="Total Vocabulary Seen"
                             value={statistics.total_vocab_seen}
                             icon={<Eye size={18} />}
                             accent="text-amber-400"
