@@ -116,7 +116,7 @@ const sections = data.is_cold_start
     };
 
     return (
-        <div className="bg-[#0a1628] h-screen flex flex-col p-4 mx-6 text-white overflow-y-auto">
+        <div className="bg-[#0a1628] h-screen flex flex-col p-4 pb-20 md:pb-4 md:mx-6 text-white overflow-y-auto">
             <h1 className='text-3xl text-start w-full font-bold mb-6'>Feed</h1>
 
             <Tab

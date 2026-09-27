@@ -17,10 +17,10 @@ export function RecommendedHeroCard({ rec, isColdStart = false }: RecommendedHer
     return (
         <Link
             to={`/video/${rec.id}`}
-            className="group flex flex-col gap-4 rounded-2xl border border-white/10 bg-[#101c30] p-3.5 transition-colors hover:border-white/20 sm:flex-row"
+            className="group flex flex-col gap-4 overflow-hidden rounded-2xl border border-white/10 bg-[#101c30] transition-colors hover:border-white/20 sm:flex-row sm:p-3.5"
         >
-            {/* Thumbnail */}
-            <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-xl bg-[#1b2942] sm:w-1/2">
+            {/* Thumbnail — edge-to-edge on mobile (matches Explore cards), inset frame from sm up */}
+            <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-[#1b2942] sm:w-1/2 sm:rounded-xl">
                 <img
                     src={rec.video.thumbnail_url}
                     alt=""
@@ -35,7 +35,7 @@ export function RecommendedHeroCard({ rec, isColdStart = false }: RecommendedHer
             </div>
 
             {/* Content */}
-            <div className="flex flex-1 flex-col sm:py-1.5">
+            <div className="flex flex-1 flex-col px-4 pb-4 sm:px-0 sm:pb-0 sm:py-1.5">
                 <h3 className="line-clamp-2 text-lg font-semibold leading-snug text-white">{rec.video.title}</h3>
                 <p className="mt-0.5 text-sm text-white/50">{rec.video.channel_name}</p>
 
@@ -55,7 +55,7 @@ export function RecommendedHeroCard({ rec, isColdStart = false }: RecommendedHer
                     )}
                 </div>
 
-                <span className="mt-4 inline-flex w-fit items-center gap-2 rounded-lg bg-teal-500 px-5 py-2.5 text-sm font-semibold text-[#04241f] transition-colors group-hover:bg-teal-400">
+                <span className="mt-4 inline-flex w-full items-center justify-center gap-2 sm:w-fit sm:justify-start rounded-lg bg-teal-500 px-5 py-2.5 text-sm font-semibold text-[#04241f] transition-colors group-hover:bg-teal-400">
                     <Play size={16} />
                     Start watching
                 </span>
