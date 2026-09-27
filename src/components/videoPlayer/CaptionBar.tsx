@@ -126,11 +126,12 @@ function CaptionLine({
                             ${isCurrent
                                 ? `cursor-pointer rounded-sm transition-all duration-150
        hover:text-teal-200 hover:bg-teal-500/20 active:text-teal-200 active:bg-teal-500/25
-       pointer-coarse:underline pointer-coarse:decoration-dotted pointer-coarse:decoration-teal-400/60
-       pointer-coarse:decoration-2 pointer-coarse:underline-offset-[5px]
        after:absolute after:bottom-0 after:left-0 after:right-0
        after:h-px after:bg-teal-300/70 after:scale-x-0
-       hover:after:scale-x-100 after:transition-transform after:duration-150`
+       hover:after:scale-x-100 after:transition-transform after:duration-150
+       pointer-coarse:after:scale-x-100 pointer-coarse:after:left-0.5 pointer-coarse:after:right-0.5
+       pointer-coarse:after:-bottom-0.5 pointer-coarse:after:h-0.5 pointer-coarse:after:rounded-full
+       pointer-coarse:after:bg-teal-400/60`
                             
                                 : ""
                             }
