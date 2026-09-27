@@ -371,7 +371,7 @@ sentenceApi.get(videoId).then(response => {
     
             <div className="flex flex-col md:flex-row h-screen overflow-hidden" >
 
-                <div className="left  flex-col min-h-0 p-10 w-full md:basis-[70%] md:max-w-[70%] ">
+                <div className="left  flex-col min-h-0 p-4 md:p-10 w-full md:basis-[70%] md:max-w-[70%] ">
                     <div className="mb-4 inline-flex rounded-lg border border-white/10 bg-darkgrey p-1 text-sm">
                         <button
                             type="button"

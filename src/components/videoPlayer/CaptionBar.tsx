@@ -88,12 +88,15 @@ function CaptionLine({
             ? "text-base sm:text-lg"
             : "text-sm sm:text-base"
 
+    // Font size is intentionally NOT transitioned: the auto-scroll measures line heights
+    // right after render, so heights must already be final (an animating font-size would
+    // make the current caption land off-centre).
     return (
         <div
             className={`
-                transition-all duration-150 ease-out
+                transition-[opacity,transform,color] duration-150 ease-out
                 flex flex-wrap items-center justify-center gap-x-0.5 gap-y-1
-                px-4 py-1 text-center font-japanese leading-relaxed
+                px-2 md:px-4 py-1 text-center font-japanese leading-relaxed
                 ${opacity} ${scale} ${fontSize}
                 ${isCurrent ? "text-white" : "text-white/70"}
             `}
@@ -121,8 +124,10 @@ function CaptionLine({
                         className={`
                             relative select-text
                             ${isCurrent
-                                ? `cursor-pointer transition-all duration-150
-       hover:text-teal-200 hover:bg-teal-500/20
+                                ? `cursor-pointer rounded-sm transition-all duration-150
+       hover:text-teal-200 hover:bg-teal-500/20 active:text-teal-200 active:bg-teal-500/25
+       pointer-coarse:underline pointer-coarse:decoration-dotted pointer-coarse:decoration-teal-400/60
+       pointer-coarse:decoration-2 pointer-coarse:underline-offset-[5px]
        after:absolute after:bottom-0 after:left-0 after:right-0
        after:h-px after:bg-teal-300/70 after:scale-x-0
        hover:after:scale-x-100 after:transition-transform after:duration-150`
@@ -152,22 +157,45 @@ export default function CaptionBar({
     const currentIndex    = getCurrentIndex(sortedCaptions, currentTime)
     const containerRef    = useRef<HTMLDivElement>(null)
     const lineRefs        = useRef<(HTMLDivElement | null)[]>([])
-    const [isHovered, setIsHovered] = useState(false)
+    // Auto-scroll is paused while the user is interacting with the list:
+    // - mouse: for as long as the pointer is over the captions
+    // - touch: briefly after a touch/scroll (touch has no reliable "leave" event,
+    //   so a hover-style flag would get stuck and freeze auto-scroll)
+    const [isAutoScrollPaused, setIsAutoScrollPaused] = useState(false)
+    const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const TOUCH_RESUME_MS = 3000
 
-    // Scroll current caption into centre
+    const pauseAutoScroll = (resumeAfterMs?: number) => {
+        setIsAutoScrollPaused(true)
+        if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current)
+        resumeTimerRef.current = resumeAfterMs
+            ? setTimeout(() => setIsAutoScrollPaused(false), resumeAfterMs)
+            : null
+    }
+
+    const resumeAutoScroll = () => {
+        if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current)
+        resumeTimerRef.current = null
+        setIsAutoScrollPaused(false)
+    }
+
+    useEffect(() => () => {
+        if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current)
+    }, [])
+
+    // Scroll current caption into centre. Scrolls only this list (scrollIntoView would
+    // also scroll every scrollable ancestor, nudging the whole page on mobile).
     useEffect(() => {
-        if (isHovered) return
+        if (isAutoScrollPaused) return
         if (currentIndex === null) return
 
+        const container = containerRef.current
         const currentEl = lineRefs.current[currentIndex]
-        if (!currentEl || !containerRef.current) return
+        if (!currentEl || !container) return
 
-        currentEl.scrollIntoView({
-            behavior: "auto",
-            block:    "center",
-            inline:   "nearest",
-        })
-    }, [currentIndex, isHovered])
+        const top = currentEl.offsetTop - (container.clientHeight - currentEl.offsetHeight) / 2
+        container.scrollTo({ top, behavior: "smooth" })
+    }, [currentIndex, isAutoScrollPaused])
 
     if (!sortedCaptions.length) {
         return (
@@ -179,50 +207,38 @@ export default function CaptionBar({
 
     return (
         <div
-            className="relative shrink-0 bg-darkgrey/95 border-t border-white/5"
-            style={{ height: "160px" }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            // Taller on mobile: captions wrap to 2–3 lines on narrow screens
+            className="relative shrink-0 h-[208px] md:h-[160px] bg-darkgrey/95 border-t border-white/5"
+            onPointerEnter={(e) => { if (e.pointerType === "mouse") pauseAutoScroll() }}
+            onPointerLeave={(e) => { if (e.pointerType === "mouse") resumeAutoScroll() }}
+            onTouchStart={() => pauseAutoScroll()}
+            onTouchEnd={() => pauseAutoScroll(TOUCH_RESUME_MS)}
+            onTouchCancel={() => pauseAutoScroll(TOUCH_RESUME_MS)}
         >
             {/* Top fade */}
             <div
-                className="absolute top-0 left-0 right-0 z-10 pointer-events-none"
+                className="absolute top-0 left-0 right-0 z-10 pointer-events-none h-6 md:h-10"
                 style={{
-                    height:     "40px",
                     background: "linear-gradient(to bottom, var(--color-darkgrey, #0f172a), transparent)"
                 }}
             />
 
             {/* Bottom fade */}
             <div
-                className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none"
+                className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none h-6 md:h-10"
                 style={{
-                    height:     "40px",
                     background: "linear-gradient(to top, var(--color-darkgrey, #0f172a), transparent)"
                 }}
             />
 
-            {/* Current line indicator — centre line */}
-            <div
-                className="absolute left-0 right-0 z-0 pointer-events-none"
-                style={{
-                    top:       "50%",
-                    transform: "translateY(-50%)",
-                    height:    "44px",
-                    background: "rgba(20, 184, 166, 0.04)",
-                    borderTop:    "1px solid rgba(20, 184, 166, 0.12)",
-                    borderBottom: "1px solid rgba(20, 184, 166, 0.12)",
-                }}
-            />
-
-            {/* Scrollable caption list */}
+            {/* Scrollable caption list (relative → line offsetTop is measured against it) */}
             <div
                 ref={containerRef}
-                className="h-full overflow-y-auto scrollbar-hide"
+                className="relative h-full overflow-y-auto scrollbar-hide"
                 style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-                {/* Top padding so first caption can scroll to centre */}
-                <div style={{ height: "60px" }} />
+                {/* Top padding (half the viewport) so the first caption can scroll to centre */}
+                <div className="h-1/2" />
 
                 {sortedCaptions.map((caption, i) => {
                     const position = currentIndex === null ? i + 1 : i - currentIndex
@@ -238,10 +254,17 @@ export default function CaptionBar({
                         )
                     }
 
+                    // The highlight lives on the current line itself, so it always wraps
+                    // the caption no matter how many lines it breaks into.
                     return (
                         <div
                             key={caption.index}
                             ref={(el) => { lineRefs.current[i] = el }}
+                            className={`border-y py-0.5 transition-colors duration-150 ${
+                                position === 0
+                                    ? "border-teal-500/15 bg-teal-500/[0.05]"
+                                    : "border-transparent"
+                            }`}
                         >
                             <CaptionLine
                                 caption={caption}
@@ -254,7 +277,7 @@ export default function CaptionBar({
                 })}
 
                 {/* Bottom padding so last caption can scroll to centre */}
-                <div style={{ height: "60px" }} />
+                <div className="h-1/2" />
             </div>
         </div>
     )
