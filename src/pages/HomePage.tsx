@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getFeedVideos, getRecommendations, getVideosByDifficulty } from '../api/video';
 import { useAuth } from '../authContext';
+import { BrandLogo } from '../components/common/BrandLogo';
 import { Pagination } from '../components/common/Pagination';
 import { SearchBar } from '../components/common/SearchBar';
 import Tab from '../components/common/Tab';
@@ -117,7 +118,11 @@ const sections = data.is_cold_start
 
     return (
         <div className="bg-[#0a1628] h-screen flex flex-col p-4 pb-20 md:pb-4 md:mx-6 text-white overflow-y-auto">
-            <h1 className='text-3xl text-start w-full font-bold mb-6'>Feed</h1>
+            {/* Mobile has no sidebar, so the brand mark lives in the feed header there */}
+            <div className='mb-6 flex items-center gap-3'>
+                <BrandLogo size={28} className='md:hidden' />
+                <h1 className='text-3xl text-start font-bold'>Feed</h1>
+            </div>
 
             <Tab
                 titles={TABS}
