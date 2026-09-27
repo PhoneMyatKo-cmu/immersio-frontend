@@ -16,6 +16,7 @@ import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../authContext'
 import BottomSheet from '../videoPlayer/BottomSheet'
+import { BrandLogo } from './BrandLogo'
 
 interface SidebarItem {
     icon: React.ReactNode
@@ -75,9 +76,7 @@ export function Sidebar({ expanded, onToggle }: SidebarProps) {
             >
                 {/* Brand */}
                 <div className={`mb-8 flex items-center ${expanded ? 'gap-2 px-3' : 'justify-center'}`}>
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-600 text-lg font-bold text-white">
-                        I
-                    </div>
+                    <BrandLogo size={36} alt={expanded ? '' : 'Immersio'} />
                     {expanded && <span className="text-lg font-semibold text-white">Immersio</span>}
                 </div>
 

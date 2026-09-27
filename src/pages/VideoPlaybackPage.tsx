@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom"
 import { captionApi } from "../api/caption"
 import { vocabApi } from "../api/vocab_context"
 import BottomSheet from "../components/videoPlayer/BottomSheet"
+import { BrandLoader } from "../components/common/BrandLogo"
 import type { Caption } from "../components/videoPlayer/CaptionBar"
 import CaptionBar from "../components/videoPlayer/CaptionBar"
 import LookupPanel, { type LookupResult } from "../components/videoPlayer/LookUpPanel"
@@ -354,9 +355,7 @@ sentenceApi.get(videoId).then(response => {
     }, [videoId])
 
     if (isLoading) {
-        return <>
-            <h1>Is Still Loading</h1>
-        </>
+        return <BrandLoader label="Loading video" />
     }
     else {
         if(isNoVideoError){

@@ -2,6 +2,7 @@ import { LogOut, Users, Video } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import * as authApi from "../../api/auth";
 import { useAuth } from "../../authContext";
+import { BrandLogo } from "../common/BrandLogo";
 
 const tabBase =
     "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors";
@@ -33,9 +34,7 @@ export function AdminLayout() {
                     {/* Brand row — on mobile this shares the line with a Logout button */}
                     <div className="flex items-center justify-between md:justify-start">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-600 text-lg font-bold">
-                                I
-                            </div>
+                            <BrandLogo size={36} />
                             <span className="flex items-center gap-2 text-sm font-semibold tracking-wide text-white/80">
                                 Admin
                                 <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-400">
