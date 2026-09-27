@@ -7,6 +7,8 @@ type AuthContextType = {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  // Replace the cached user after a profile edit (keeps context + localStorage in sync).
+  updateUser: (user: User) => void;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);

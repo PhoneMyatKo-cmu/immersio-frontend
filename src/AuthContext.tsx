@@ -48,8 +48,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
+  const updateUser = (next: User) => {
+    localStorage.setItem("user", JSON.stringify(next));
+    setUser(next);
+  };
+
   const value = useMemo(
-    () => ({ user, loading, isAuthenticated: !!user, login, logout }),
+    () => ({ user, loading, isAuthenticated: !!user, login, logout, updateUser }),
     [user, loading]
   );
 
