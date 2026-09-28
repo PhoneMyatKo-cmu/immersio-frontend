@@ -1,6 +1,9 @@
-import { useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { shadowingApi } from "../../api/shadowing"
+import { useRotatingMessage } from "../../hooks/useRotatingMessage"
+import { revealProps } from "../../utils/reveal"
+import { AiThinkingStatus, ShimmerLine } from "../common/AiLoading"
 import { Modal } from "../common/Modal"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -31,6 +34,8 @@ export interface FeedbackSummary {
 
 export interface ScoreExplanationProps {
     request: ScoreExplanationRequest
+    /** Words the learner mispronounced — named in the loading copy so the wait feels personal. */
+    focusWords?: string[]
 }
 
 // ── API placeholder ────────────────────────────────────────────────────────────
@@ -60,16 +65,18 @@ function FeedbackList({
     label,
     items,
     tone = "neutral",
+    revealDelayMs = 0,
 }: {
     label: string
     items?: string[]
     tone?: "neutral" | "good" | "improve"
+    revealDelayMs?: number
 }) {
     if (!items?.length) return null
     const dot =
         tone === "good" ? "bg-teal-500" : tone === "improve" ? "bg-amber-400" : "bg-white/40"
     return (
-        <div>
+        <div {...revealProps(revealDelayMs)}>
             <SectionLabel>{label}</SectionLabel>
             <ul className="space-y-1.5">
                 {items.map((item, i) => (
@@ -83,41 +90,66 @@ function FeedbackList({
     )
 }
 
+// Answer-shaped skeleton: the section headings are known up front, so show them
+// for real and shimmer only the text — the layout barely moves when data lands.
+const SKELETON_SECTIONS: { label: string; lines: string[] }[] = [
+    { label: "Strengths", lines: ["w-5/6", "w-2/3"] },
+    { label: "Pronunciation", lines: ["w-full", "w-3/4"] },
+    { label: "Pitch & intonation", lines: ["w-4/5"] },
+    { label: "Work on next", lines: ["w-5/6", "w-1/2"] },
+]
+
 function LoadingState() {
+    let n = 0
     return (
-        <div className="space-y-4 animate-pulse">
+        <div className="space-y-4" aria-hidden="true">
             <div className="space-y-2">
-                <div className="h-4 bg-white/8 rounded w-full" />
-                <div className="h-4 bg-white/8 rounded w-4/5" />
+                <ShimmerLine className="h-4 w-full" delayMs={n++ * 90} />
+                <ShimmerLine className="h-4 w-4/5" delayMs={n++ * 90} />
             </div>
-            <div className="space-y-2">
-                <div className="h-3 w-24 bg-white/6 rounded" />
-                <div className="h-3 bg-white/6 rounded w-5/6" />
-                <div className="h-3 bg-white/6 rounded w-3/4" />
-            </div>
-            <div className="space-y-2">
-                <div className="h-3 w-24 bg-white/6 rounded" />
-                <div className="h-3 bg-white/6 rounded w-4/5" />
-            </div>
+            {SKELETON_SECTIONS.map((section) => (
+                <div key={section.label}>
+                    <p className="mb-2 text-[12px] font-semibold uppercase tracking-widest text-white/35">
+                        {section.label}
+                    </p>
+                    <div className="space-y-1.5">
+                        {section.lines.map((w, i) => (
+                            <ShimmerLine key={i} className={`h-3 ${w}`} delayMs={n++ * 90} />
+                        ))}
+                    </div>
+                </div>
+            ))}
         </div>
     )
 }
 
 // ── Main component ──────────────────────────────────────────────────────────────
 
-export default function ScoreExplanation({ request }: ScoreExplanationProps) {
+export default function ScoreExplanation({ request, focusWords = [] }: ScoreExplanationProps) {
     const [data, setData] = useState<FeedbackSummary | null>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [hasFetched, setHasFetched] = useState(false)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const navigate = useNavigate()
+    const containerRef = useRef<HTMLDivElement>(null)
+
+    const focusKey = focusWords.slice(0, 2).join("・")
+    const steps = useMemo(() => [
+        "Reading your transcription…",
+        focusKey ? `Looking at ${focusKey}…` : "Comparing each sound…",
+        "Checking your pitch pattern…",
+        "Writing your tips…",
+    ], [focusKey])
+    const thinkingMessage = useRotatingMessage(steps, isLoading)
 
     function handleFetch() {
         if (hasFetched || isLoading) return
 
         setIsLoading(true)
         setError(null)
+        // The button sits low in the panel / bottom sheet — keep the status in view.
+        setTimeout(() => containerRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }), 50)
 
         getScoreFeedback(request)
             .then((response) => {
@@ -147,9 +179,13 @@ export default function ScoreExplanation({ request }: ScoreExplanationProps) {
     let content: React.ReactNode = null
 
     if (isLoading) {
+        // The button's box turns into the status line in place, skeleton below.
         content = (
-            <div className="border-t border-white/6 pt-4">
-                <LoadingState />
+            <div className="space-y-4">
+                <AiThinkingStatus message={thinkingMessage} srLabel="Explaining your score" />
+                <div className="border-t border-white/6 pt-4">
+                    <LoadingState />
+                </div>
             </div>
         )
     } else if (error) {
@@ -191,21 +227,21 @@ export default function ScoreExplanation({ request }: ScoreExplanationProps) {
     } else if (data) {
         content = (
             <div className="border-t border-white/6 pt-4 space-y-4">
-                <h2 className="text-lg font-semibold">Score Explanation</h2>
+                <h2 {...revealProps(0)} className={`text-lg font-semibold ${revealProps(0).className}`}>Score Explanation</h2>
                 {data.summary && (
-                    <p className="text-sm text-white/75 leading-relaxed">{data.summary}</p>
+                    <p {...revealProps(80)} className={`text-sm text-white/75 leading-relaxed ${revealProps(80).className}`}>{data.summary}</p>
                 )}
-                <FeedbackList label="Strengths" items={data.strengths} tone="good" />
-                <FeedbackList label="Pronunciation" items={data.pronunciation_feedback} />
-                <FeedbackList label="Pitch & intonation" items={data.pitch_feedback} />
-                <FeedbackList label="Work on next" items={data.improvements} tone="improve" />
+                <FeedbackList label="Strengths" items={data.strengths} tone="good" revealDelayMs={160} />
+                <FeedbackList label="Pronunciation" items={data.pronunciation_feedback} revealDelayMs={240} />
+                <FeedbackList label="Pitch & intonation" items={data.pitch_feedback} revealDelayMs={320} />
+                <FeedbackList label="Work on next" items={data.improvements} tone="improve" revealDelayMs={400} />
             </div>
         )
     }
 
     return (
         <>
-            {content}
+            <div ref={containerRef} className="scroll-mb-4">{content}</div>
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}

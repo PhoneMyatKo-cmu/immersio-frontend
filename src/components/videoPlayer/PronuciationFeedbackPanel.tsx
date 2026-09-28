@@ -251,7 +251,9 @@ export default function ShadowingFeedbackPanel({
 
                         {/* AI feedback */}
                         <div {...reveal(340)}>
-                        <ScoreExplanation request={
+                        <ScoreExplanation
+                            focusWords={result.caption_error.filter(([, ok]) => !ok).map(([word]) => word)}
+                            request={
                             {
                                  cer: result.cer,
             pitch_score: result.pitch_score.score,

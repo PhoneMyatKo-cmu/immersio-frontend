@@ -1,7 +1,10 @@
-import { useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { vocabApi } from "../../api/vocab_context"
 import type { ContextResponse, ContextualExplanationProps, ExampleSentence } from "../../types/vocabContext"
+import { useRotatingMessage } from "../../hooks/useRotatingMessage"
+import { revealProps } from "../../utils/reveal"
+import { AiThinkingStatus, ShimmerLine } from "../common/AiLoading"
 import { Modal } from "../common/Modal"
 
 
@@ -84,18 +87,29 @@ function ConfidenceBadge({ confidence }: { confidence: string }) {
     )
 }
 
+// Answer-shaped skeleton with the real section headings; only the text shimmers.
 function LoadingState() {
     return (
-        <div className="space-y-3 animate-pulse">
-            <div className="h-3 w-28 bg-white/6 rounded" />
-            <div className="space-y-2">
-                <div className="h-4 bg-white/8 rounded w-full" />
-                <div className="h-4 bg-white/8 rounded w-4/5" />
-                <div className="h-4 bg-white/8 rounded w-3/5" />
+        <div className="space-y-4" aria-hidden="true">
+            <div>
+                <SectionLabel>Contextual explanation</SectionLabel>
+                <div className="space-y-2">
+                    <ShimmerLine className="h-4 w-full" />
+                    <ShimmerLine className="h-4 w-4/5" delayMs={90} />
+                    <ShimmerLine className="h-4 w-3/5" delayMs={180} />
+                </div>
             </div>
-            <div className="h-3 w-24 bg-white/6 rounded mt-4" />
-            <div className="h-16 bg-white/4 rounded-lg border border-white/6" />
-            <div className="h-16 bg-white/4 rounded-lg border border-white/6" />
+            <div>
+                <SectionLabel>Example sentences</SectionLabel>
+                <div className="space-y-2">
+                    {[0, 1].map((i) => (
+                        <div key={i} className="space-y-2 rounded-lg border border-white/6 bg-white/4 px-3 py-2.5">
+                            <ShimmerLine className="h-3.5 w-11/12" delayMs={270 + i * 180} />
+                            <ShimmerLine className="h-2.5 w-2/3" delayMs={360 + i * 180} />
+                        </div>
+                    ))}
+                </div>
+            </div>
         </div>
     )
 }
@@ -111,6 +125,14 @@ export default function ContextualExplanation({
     const [error,     setError]     = useState<string | null>(null)
     const [hasFetched, setHasFetched] = useState(false)
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const containerRef = useRef<HTMLDivElement>(null)
+
+    const steps = useMemo(() => [
+        `Reading 「${surfaceForm}」 in this sentence…`,
+        "Finding the nuance…",
+        "Writing example sentences…",
+    ], [surfaceForm])
+    const thinkingMessage = useRotatingMessage(steps, isLoading)
     const navigate = useNavigate()
 
     async function handleFetch() {
@@ -118,6 +140,8 @@ export default function ContextualExplanation({
 
         setIsLoading(true)
         setError(null)
+        // Keep the status in view (the button can sit below the fold in the lookup panel).
+        setTimeout(() => containerRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }), 50)
 
         vocabApi.getContextualExplanation(request).then(response => {
             setData(response.data)
@@ -144,9 +168,13 @@ export default function ContextualExplanation({
     let content: React.ReactNode = null
 
     if (isLoading) {
+        // The button's box turns into the status line in place, skeleton below.
         content = (
-            <div className="border-t border-white/6 pt-4">
-                <LoadingState />
+            <div className="space-y-4">
+                <AiThinkingStatus message={thinkingMessage} srLabel="Explaining this word in context" />
+                <div className="border-t border-white/6 pt-4">
+                    <LoadingState />
+                </div>
             </div>
         )
     } else if (error) {
@@ -192,7 +220,7 @@ export default function ContextualExplanation({
             <div className="border-t border-white/6 pt-4 space-y-4">
 
             {/* ── Contextual explanation ── */}
-            <div>
+            <div {...revealProps(0)}>
                 <div className="flex items-center justify-between mb-2">
                     <SectionLabel>Contextual explanation</SectionLabel>
                     <ConfidenceBadge confidence={data.confidence} />
@@ -215,7 +243,7 @@ export default function ContextualExplanation({
 
             {/* ── Example sentences ── */}
             {data.examples.length > 0 && (
-                <div>
+                <div {...revealProps(140)}>
                     <SectionLabel>Example sentences</SectionLabel>
                     <div className="space-y-2">
                         {data.examples.map((ex, i) => (
@@ -232,7 +260,7 @@ export default function ContextualExplanation({
 
             {/* Low confidence note */}
             {data.confidence === "low" && (
-                <p className="text-[10px] text-white/25 text-center leading-relaxed">
+                <p style={revealProps(260).style} className="motion-safe:animate-reveal text-[10px] text-white/25 text-center leading-relaxed">
                     This word may have been incorrectly analysed.
                     Use the explanation as a guide only.
                 </p>
@@ -243,7 +271,7 @@ export default function ContextualExplanation({
 
     return (
         <>
-            {content}
+            <div ref={containerRef} className="scroll-mb-4">{content}</div>
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
