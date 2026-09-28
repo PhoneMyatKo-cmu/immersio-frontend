@@ -1,6 +1,10 @@
-import { Mic, X } from "lucide-react"
+import { Check, Mic, X } from "lucide-react"
+import { useEffect, useState } from "react"
+import { useCountUp } from "../../hooks/useCountUp"
 import PitchContour from "./PitchContour"
+import { useScoringMessage } from "../../hooks/useScoringMessage"
 import ScoreExplanation from "./ScoreExplanation"
+import ScoringWave from "./ScoringWave"
 
 /* ============================================================================
  * Internal UI type — STABLE. The panel renders this shape.
@@ -79,25 +83,34 @@ function ScoreCard({
     score?: number
     hint?: string
 }) {
-    const has = typeof score === "number"
-    console.log("Type of score:",typeof score)
+    const has = typeof score === "number" && Number.isFinite(score)
+    // Counts up from 0 once the card is revealed; the bar grows with it.
+    const shown = useCountUp(has ? score! : 0, 900, 150)
     return (
         <div className="rounded-lg border border-white/10 bg-white/5 p-3">
             <p className="text-xs text-white/50">{label}</p>
             <p className={`mt-1 text-2xl font-medium tabular-nums ${has ? scoreColor(score!) : "text-teal-500"}`}>
-                {has ? `${score.toFixed(2)}` : "—"}
+                {has ? `${shown.toFixed(2)}` : "—"}
                 {has && <span className="text-base text-white/40">%</span>}
             </p>
             <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/10">
                 <div
                     className={`h-full rounded-full ${has ? barColor(score!) : "bg-amber-500"}`}
-                    style={{ width: has ? `${Math.max(0, Math.min(100, score!))}%` : "0%" }}
+                    style={{ width: has ? `${Math.max(0, Math.min(100, shown))}%` : "0%" }}
                 />
             </div>
             {hint && <p className="mt-1.5 text-[11px] text-white/30">{hint}</p>}
         </div>
     )
 }
+
+const SETTLE_MS = 450
+
+// Staggered entrance for result sections (delay in ms).
+const reveal = (delayMs: number) => ({
+    className: "motion-safe:animate-reveal",
+    style: { animationDelay: `${delayMs}ms` },
+})
 
 function SkeletonBlock({ className = "" }: { className?: string }) {
     return <div className={`animate-pulse rounded-md bg-white/5 ${className}`} />
@@ -108,6 +121,25 @@ export default function ShadowingFeedbackPanel({
     isLoading,
     onClose,
 }: ShadowingFeedbackPanelProps) {
+    const { message: scoringMessage } = useScoringMessage(isLoading)
+
+    // "Settling" beat between loading and the result: the progress bar completes and
+    // the status reads "Feedback ready" for a moment, so the swap never feels abrupt.
+    // (Adjust-state-during-render pattern — no flash of the result before settling.)
+    const [prevLoading, setPrevLoading] = useState(isLoading)
+    const [settling, setSettling] = useState(false)
+    if (prevLoading !== isLoading) {
+        setPrevLoading(isLoading)
+        if (!isLoading && result) setSettling(true)
+    }
+    useEffect(() => {
+        if (!settling) return
+        const t = setTimeout(() => setSettling(false), SETTLE_MS)
+        return () => clearTimeout(t)
+    }, [settling])
+
+    const showStatus = isLoading || settling
+
     return (
         <div className="flex h-full flex-col text-white">
             {/* Header */}
@@ -127,8 +159,31 @@ export default function ShadowingFeedbackPanel({
 
             <div className="flex-1 overflow-y-auto p-5">
                 {/* Loading */}
-                {isLoading && (
+                {showStatus && (
                     <div className="space-y-4">
+                        {/* Live status — something moving makes the 3–4s wait feel shorter */}
+                        <div role="status" className="rounded-lg border border-teal-500/20 bg-teal-500/5 p-4 motion-safe:animate-fade-up">
+                            <span className="sr-only">Scoring your recording</span>
+                            <div className="flex items-center gap-3" aria-hidden="true">
+                                {settling ? (
+                                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-teal-400 text-[#04241f] motion-safe:animate-fade-up">
+                                        <Check className="h-3 w-3" strokeWidth={3} />
+                                    </span>
+                                ) : (
+                                    <ScoringWave bars={7} />
+                                )}
+                                <p key={settling ? "ready" : scoringMessage} className="text-sm text-teal-100 motion-safe:animate-fade-up">
+                                    {settling ? "Feedback ready" : scoringMessage}
+                                </p>
+                            </div>
+                            <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/10">
+                                {settling ? (
+                                    <div className="h-full w-full rounded-full bg-teal-400 motion-safe:animate-scoring-complete" />
+                                ) : (
+                                    <div className="h-full w-1/2 rounded-full bg-teal-400 motion-safe:animate-scoring-progress" />
+                                )}
+                            </div>
+                        </div>
                         <div className="grid grid-cols-2 gap-3">
                             <SkeletonBlock className="h-24" />
                             <SkeletonBlock className="h-24" />
@@ -139,7 +194,7 @@ export default function ShadowingFeedbackPanel({
                 )}
 
                 {/* Empty */}
-                {!isLoading && !result && (
+                {!showStatus && !result && (
                     <div className="flex h-full flex-col items-center justify-center py-16 text-center">
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5">
                             <Mic className="h-5 w-5 text-white/30" />
@@ -151,10 +206,10 @@ export default function ShadowingFeedbackPanel({
                 )}
 
                 {/* Result */}
-                {!isLoading && result && (
+                {!showStatus && result && (
                     <div className="space-y-5">
                         {/* Scores */}
-                        <div className="grid grid-cols-2 gap-3">
+                        <div {...reveal(0)} className={`grid grid-cols-2 gap-3 ${reveal(0).className}`}>
                             <ScoreCard
                                 label="Pronunciation Accuracy"
                                 score={Number((1-result.cer) * 100)}
@@ -169,8 +224,12 @@ export default function ShadowingFeedbackPanel({
 
                       
 
-                        <ScoredSentence words={result.caption_error} />
-                        <PitchContour userPitch={result.user_pitch} referencePitch={result.reference_pitch}/>
+                        <div {...reveal(120)}>
+                            <ScoredSentence words={result.caption_error} />
+                        </div>
+                        <div {...reveal(220)}>
+                            <PitchContour userPitch={result.user_pitch} referencePitch={result.reference_pitch} animationDelayMs={320} />
+                        </div>
 
 
                         
@@ -191,6 +250,7 @@ export default function ShadowingFeedbackPanel({
                         )} */}
 
                         {/* AI feedback */}
+                        <div {...reveal(340)}>
                         <ScoreExplanation request={
                             {
                                  cer: result.cer,
@@ -202,8 +262,9 @@ export default function ShadowingFeedbackPanel({
                                 caption: result.caption_katakana.map(([, k]) => k).join("")
                             }
                         }
-                            
+
                         />
+                        </div>
                         {/* {(result.feedback || result.feedbackPoints?.length) && (
                             <div className="rounded-lg border border-teal/30 bg-teal/5 p-4">
                                 <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-teal">

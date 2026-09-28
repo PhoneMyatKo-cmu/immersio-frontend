@@ -3,7 +3,12 @@ import { useMemo } from "react";
 interface PitchContourProps {
     referencePitch: number[]
     userPitch: number[]
+    /** Delay before the lines start drawing (lets the panel reveal settle first). */
+    animationDelayMs?: number
 }
+
+// The learner's line starts this long after the reference, so it visibly "follows" it.
+const USER_LAG_MS = 400
 
 const W = 700, H = 170, PAD = 14, SMOOTH = 10
 
@@ -22,7 +27,7 @@ function clean(raw: number[]): { x: number; y: number }[] {
     })
 }
 
-export default function PitchContour({ referencePitch, userPitch }: PitchContourProps) {
+export default function PitchContour({ referencePitch, userPitch, animationDelayMs = 0 }: PitchContourProps) {
     const { refPts, userPts, yMin, yMax } = useMemo(() => {
         const refPts = clean(referencePitch)
         const userPts = clean(userPitch)
@@ -40,13 +45,23 @@ export default function PitchContour({ referencePitch, userPitch }: PitchContour
     return (
         <div>
             <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
-                <line x1={PAD} y1={H / 2} x2={W - PAD} y2={H / 2} stroke="rgba(255,255,255,0.07)" />
+                <line x1={PAD} y1={H / 2} x2={W - PAD} y2={H / 2} stroke="rgba(255,255,255,0.07)"
+                      className="motion-safe:animate-reveal" style={{ animationDelay: `${animationDelayMs}ms` }} />
+                {/* pathLength=1 + dasharray=1 → the draw-line keyframe traces each line start → end.
+                    Without motion the dash covers the whole path, so the line simply shows. */}
                 <path d={path(refPts)} fill="none" stroke="#14B8A6" strokeWidth={2.5}
-                      strokeLinejoin="round" strokeLinecap="round" />
+                      strokeLinejoin="round" strokeLinecap="round"
+                      pathLength={1} strokeDasharray={1}
+                      className="motion-safe:animate-draw-line"
+                      style={{ animationDelay: `${animationDelayMs}ms` }} />
                 <path d={path(userPts)} fill="none" stroke="#f87171" strokeWidth={2.5}
-                      strokeLinejoin="round" strokeLinecap="round" />
+                      strokeLinejoin="round" strokeLinecap="round"
+                      pathLength={1} strokeDasharray={1}
+                      className="motion-safe:animate-draw-line"
+                      style={{ animationDelay: `${animationDelayMs + USER_LAG_MS}ms` }} />
             </svg>
-            <div className="mt-2 flex gap-4 text-xs text-white/60">
+            <div className="mt-2 flex gap-4 text-xs text-white/60 motion-safe:animate-reveal"
+                 style={{ animationDelay: `${animationDelayMs + USER_LAG_MS}ms` }}>
                 <span className="flex items-center gap-1.5"><span className="h-0.5 w-3 rounded bg-teal-500" />Reference</span>
                 <span className="flex items-center gap-1.5"><span className="h-0.5 w-3 rounded bg-red-400" />You</span>
             </div>

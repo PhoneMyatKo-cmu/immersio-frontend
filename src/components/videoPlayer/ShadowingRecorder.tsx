@@ -1,5 +1,7 @@
 import { AlertCircle, AlertTriangle, Loader2, Mic, Pause, Play, RotateCcw, Square } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useScoringMessage } from "../../hooks/useScoringMessage"
+import ScoringWave from "./ScoringWave"
 
 type RecorderState =
     | "idle"
@@ -49,7 +51,12 @@ export interface ShadowingRecorderProps {
     noiseSampleMs?: number
 }
 
-const NUM_BARS = 5
+const NUM_BARS = 9
+// Voice energy sits in the low end of the spectrum, so only the first bins
+// (~0–9 kHz at 48 kHz / fftSize 256) are spread across the bars.
+const VOICE_BINS = 48
+// Low frequencies in the centre, fanning out — reads as a symmetric waveform.
+const BAR_ORDER = [8, 6, 4, 2, 0, 1, 3, 5, 7]
 const METER_THROTTLE_MS = 80
 
 export default function ShadowingRecorder({
@@ -190,19 +197,19 @@ export default function ShadowingRecorder({
         const analyser = analyserRef.current
         if (!analyser) return
         const data = new Uint8Array(analyser.frequencyBinCount)
-        const band = Math.floor(data.length / NUM_BARS)
+        const band = Math.max(1, Math.floor(Math.min(VOICE_BINS, data.length) / NUM_BARS))
         let lastUpdate = 0
 
         const tick = (now: number) => {
             if (now - lastUpdate >= METER_THROTTLE_MS) {
                 analyser.getByteFrequencyData(data)
-                const next: number[] = []
+                const bands: number[] = []
                 for (let i = 0; i < NUM_BARS; i++) {
                     let sum = 0
                     for (let j = 0; j < band; j++) sum += data[i * band + j]
-                    next.push(Math.min(1, sum / band / 180))
+                    bands.push(Math.min(1, sum / band / 180))
                 }
-                setLevels(next)
+                setLevels(BAR_ORDER.map((b) => bands[b]))
                 lastUpdate = now
             }
             rafRef.current = requestAnimationFrame(tick)
@@ -359,6 +366,9 @@ export default function ShadowingRecorder({
         })
     }, [isReplaying, stopPlayback])
 
+    const { message: scoringMessage } = useScoringMessage(state === "processing")
+    const volume = levels.reduce((a, b) => a + b, 0) / levels.length
+
     const fmt = (ms: number) => {
         const total = Math.floor(ms / 1000)
         const m = Math.floor(total / 60)
@@ -399,30 +409,45 @@ export default function ShadowingRecorder({
                 )}
 
                 {state === "recording" && (
-                    <button
-                        type="button"
-                        onClick={stopRecording}
-                        aria-label="Stop recording"
-                        className="inline-flex min-h-[44px] items-center gap-3 rounded-full bg-red-500 px-4 text-sm font-medium text-white transition-colors hover:bg-red-600"
-                    >
-                        <Square className="h-3.5 w-3.5 fill-white" />
-                        <span className="tabular-nums">{fmt(elapsedMs)}</span>
-                        <span className="flex h-4 items-center gap-0.5" aria-hidden="true">
-                            {levels.map((l, i) => (
-                                <span
-                                    key={i}
-                                    className="w-0.5 rounded-full bg-white/80 transition-[height] duration-75"
-                                    style={{ height: `${Math.max(15, l * 100)}%` }}
-                                />
-                            ))}
-                        </span>
-                    </button>
+                    <div className="relative inline-flex">
+                        {/* Halo breathes with voice volume — instant "I hear you" feedback */}
+                        <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute inset-0 rounded-full bg-red-500/30 transition-transform duration-100 ease-out motion-reduce:hidden"
+                            style={{ transform: `scale(${1 + volume * 0.18}, ${1 + volume * 0.7})` }}
+                        />
+                        <button
+                            type="button"
+                            onClick={stopRecording}
+                            aria-label="Stop recording"
+                            className="relative inline-flex min-h-[44px] items-center gap-3 rounded-full bg-red-500 px-4 text-sm font-medium text-white transition-colors hover:bg-red-600"
+                        >
+                            <Square className="h-3.5 w-3.5 fill-white" />
+                            <span className="tabular-nums">{fmt(elapsedMs)}</span>
+                            <span className="flex h-5 items-center gap-0.5" aria-hidden="true">
+                                {levels.map((l, i) => (
+                                    <span
+                                        key={i}
+                                        className="w-0.5 rounded-full bg-white/85 transition-[height] duration-75"
+                                        style={{ height: `${Math.max(12, l * 100)}%` }}
+                                    />
+                                ))}
+                            </span>
+                        </button>
+                    </div>
                 )}
 
                 {state === "processing" && (
-                    <div className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-white/10 bg-darkgrey px-5 text-sm text-white/70">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Scoring…
+                    <div
+                        role="status"
+                        className="inline-flex min-h-[44px] w-76 max-w-full items-center gap-3 rounded-full border border-teal-500/30 bg-teal-500/10 px-5 text-sm text-teal-100 motion-safe:animate-fade-up"
+                    >
+                        <span className="sr-only">Scoring your recording</span>
+                        <ScoringWave />
+                        {/* key → each new message re-mounts and fades in */}
+                        <span key={scoringMessage} aria-hidden="true" className="truncate motion-safe:animate-fade-up">
+                            {scoringMessage}
+                        </span>
                     </div>
                 )}
 

@@ -422,6 +422,7 @@ sentenceApi.get(videoId).then(response => {
                             totalSentences={sortedSentences.length}
                             playbackSpeed={playbackSpeed}
                             onPlaybackSpeedChange={handlePlaybackSpeedChange}
+                            isScoring={feedbackLoading}
                         />
 <div className="mt-3 flex justify-center">
             <ShadowingRecorder

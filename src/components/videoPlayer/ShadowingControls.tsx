@@ -13,6 +13,8 @@ interface ShadowingControlsProps {
     totalSentences: number
     playbackSpeed: number
     onPlaybackSpeedChange: (speed: number) => void
+    /** True while the latest take is being scored — makes the sentence glow. */
+    isScoring?: boolean
 }
 
 function getSentenceText(sentence: Caption | ShadowingSentence | null): string {
@@ -68,6 +70,7 @@ export default function ShadowingControls({
     totalSentences,
     playbackSpeed,
     onPlaybackSpeedChange,
+    isScoring = false,
 }: ShadowingControlsProps) {
     const hasSentence = Boolean(currentSentence)
 
@@ -82,8 +85,19 @@ export default function ShadowingControls({
                         {currentSentenceIndex + 1}/{totalSentences}
                     </p>
                 </div>
-                <p className="min-h-12 rounded-md border border-white/8 bg-white/4 px-3 py-2 text-lg text-teal-500 text-center leading-relaxed tracking-widest ">
+                <p className={`relative min-h-12 overflow-hidden rounded-md border px-3 py-2 text-lg text-teal-500 text-center leading-relaxed tracking-widest transition-[border-color,box-shadow] duration-300 ${
+                    isScoring
+                        ? "border-teal-500/40 bg-white/4 shadow-[0_0_24px_-8px_rgba(20,184,166,0.6)]"
+                        : "border-white/8 bg-white/4"
+                }`}>
                     {getSentenceText(currentSentence) || "Waiting for the current sentence..."}
+                    {/* While scoring: a light sweep across the sentence being analysed */}
+                    {isScoring && (
+                        <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute inset-0 bg-linear-to-r from-transparent via-teal-300/15 to-transparent motion-safe:animate-scoring-sweep motion-reduce:hidden"
+                        />
+                    )}
                 </p>
             </div>
 

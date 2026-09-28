@@ -7,6 +7,45 @@
   --color-greygreen: #1d283a;
   --color-darkgrey: #0e1629;
   --color-button: #13b7a5;
+
+  /* Shadowing: pronunciation-scoring wait states */
+  --animate-scoring-wave: scoring-wave 1.1s ease-in-out infinite;
+  --animate-scoring-sweep: scoring-sweep 1.8s ease-in-out infinite;
+  --animate-scoring-progress: scoring-progress 6s cubic-bezier(0.1, 0.7, 0.3, 1) forwards;
+  --animate-fade-up: fade-up 0.35s ease-out;
+  /* Result reveal: `both` keeps staggered items hidden until their delay starts */
+  --animate-reveal: fade-up 0.45s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  --animate-scoring-complete: scoring-complete 0.35s ease-out forwards;
+  --animate-draw-line: draw-line 1.1s cubic-bezier(0.4, 0, 0.2, 1) both;
+
+  @keyframes scoring-complete {
+    from { width: 82%; }
+    to { width: 100%; }
+  }
+  /* Paths use pathLength="1" + stroke-dasharray="1" so this draws them start → end */
+  @keyframes draw-line {
+    from { stroke-dashoffset: 1; opacity: 0; }
+    8% { opacity: 1; }
+    to { stroke-dashoffset: 0; opacity: 1; }
+  }
+
+  @keyframes scoring-wave {
+    0%, 100% { transform: scaleY(0.3); }
+    50% { transform: scaleY(1); }
+  }
+  @keyframes scoring-sweep {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(100%); }
+  }
+  /* Fast start, long tail — never reaches 100% on its own */
+  @keyframes scoring-progress {
+    from { width: 4%; }
+    to { width: 92%; }
+  }
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+  }
 }
 
 body {
