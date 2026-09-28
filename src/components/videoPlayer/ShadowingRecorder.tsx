@@ -81,6 +81,8 @@ export default function ShadowingRecorder({
     const mediaRecorderRef = useRef<MediaRecorder | null>(null)
     const streamRef = useRef<MediaStream | null>(null)
     const chunksRef = useRef<Blob[]>([])
+    // Container the browser actually recorded (webm on Chrome/Android, mp4 on iOS Safari).
+    const mimeTypeRef = useRef<string>("")
     const audioCtxRef = useRef<AudioContext | null>(null)
     const analyserRef = useRef<AnalyserNode | null>(null)
     const rafRef = useRef<number | null>(null)
@@ -227,7 +229,10 @@ export default function ShadowingRecorder({
     }, [])
 
     const finalize = useCallback(async () => {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" })
+        // Label the blob with the real recorded format — iOS Safari won't play back an
+        // mp4 recording mislabelled as audio/webm (Chrome is lenient, so desktop worked).
+        const type = mimeTypeRef.current || chunksRef.current[0]?.type || "audio/webm"
+        const blob = new Blob(chunksRef.current, { type })
         chunksRef.current = []
         if (recordedUrlRef.current) URL.revokeObjectURL(recordedUrlRef.current)
         recordedUrlRef.current = URL.createObjectURL(blob)
@@ -285,6 +290,7 @@ export default function ShadowingRecorder({
 
             const mr = new MediaRecorder(stream)
             mediaRecorderRef.current = mr
+            mimeTypeRef.current = mr.mimeType
             chunksRef.current = []
             mr.ondataavailable = (e) => {
                 if (e.data.size > 0) chunksRef.current.push(e.data)
