@@ -464,13 +464,13 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
                         </select>
 
                         {/* Fullscreen */}
-                        <button
+                        {/* <button
                             onClick={toggleFullscreen}
                             className="text-white/60 text-sm hover:text-white transition-colors"
                             aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
                         >
                             {isFullscreen ? "⛶" : "⛶"}
-                        </button>
+                        </button> */}
                     </div>
                 </div>
             )}
