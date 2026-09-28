@@ -1,3 +1,4 @@
+import { ChevronUp } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
 import { captionApi } from "../api/caption"
@@ -7,7 +8,7 @@ import { BrandLoader } from "../components/common/BrandLogo"
 import type { Caption } from "../components/videoPlayer/CaptionBar"
 import CaptionBar from "../components/videoPlayer/CaptionBar"
 import LookupPanel, { type LookupResult } from "../components/videoPlayer/LookUpPanel"
-import ShadowingFeedbackPanel from "../components/videoPlayer/PronuciationFeedbackPanel"
+import ShadowingFeedbackPanel, { type ShadowingFeedback } from "../components/videoPlayer/PronuciationFeedbackPanel"
 import ShadowingControls from "../components/videoPlayer/ShadowingControls"
 import ShadowingRecorder from "../components/videoPlayer/ShadowingRecorder"
 import VideoPlayer, { type VideoPlayerHandle } from "../components/videoPlayer/VideoPlayer"
@@ -454,6 +455,21 @@ sentenceApi.get(videoId).then(response => {
                 }}
             />
                             </div>
+                        {/* Mobile: the score lives in a bottom sheet — let the learner reopen it after closing */}
+                        {isMobile && !isFeedbackOpen && (feedbackResult || feedbackLoading) && (
+                            <div className="mt-3 flex justify-center">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsFeedbackOpen(true)}
+                                    className="inline-flex min-h-[40px] items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-4 text-sm font-medium text-teal-200 transition-colors hover:bg-teal-500/20 motion-safe:animate-fade-up"
+                                >
+                                    <ChevronUp className="h-4 w-4" />
+                                    {feedbackLoading
+                                        ? "View progress"
+                                        : `View score · ${Math.round((1 - (feedbackResult as unknown as ShadowingFeedback).cer) * 100)}%`}
+                                </button>
+                            </div>
+                        )}
                         </>
                         :
  <ShadowingProcessing videoId={videoId} onReady={() => setIsShadowingReady(true)} />
