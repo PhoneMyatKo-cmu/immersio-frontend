@@ -160,7 +160,7 @@ export default function ScoreExplanation({ request, focusWords = [] }: ScoreExpl
                 const status = e?.response?.status
 
                 if (status === 401) {
-                    setIsModalOpen(true)
+                    // setIsModalOpen(true)
                     setError("Please log in to use this feature.")
                     return
                 }

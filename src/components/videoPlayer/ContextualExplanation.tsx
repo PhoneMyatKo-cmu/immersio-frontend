@@ -1,8 +1,8 @@
 import { useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { vocabApi } from "../../api/vocab_context"
-import type { ContextResponse, ContextualExplanationProps, ExampleSentence } from "../../types/vocabContext"
 import { useRotatingMessage } from "../../hooks/useRotatingMessage"
+import type { ContextResponse, ContextualExplanationProps, ExampleSentence } from "../../types/vocabContext"
 import { revealProps } from "../../utils/reveal"
 import { AiThinkingStatus, ShimmerLine } from "../common/AiLoading"
 import { Modal } from "../common/Modal"
@@ -150,7 +150,7 @@ export default function ContextualExplanation({
             const status = e?.response?.status
 
             if (status === 401) {
-                setIsModalOpen(true)
+                // setIsModalOpen(true)
                 setError("Please log in to use this feature.")
                 return
             }
