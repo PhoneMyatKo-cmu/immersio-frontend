@@ -76,6 +76,9 @@ function VideoPlaybackPage() {
     const [feedbackLoading, setFeedbackLoading] = useState<boolean>(false)
     const [sentences, setSentences] = useState<ShadowingSentence[]>([])
     const [isShadowingReady, setIsShadowingReady] = useState<boolean>(false)
+    // YouTube player methods don't exist until onReady — switching to Shadowing before
+    // then seeks a not-ready player and crashes the page, so the tab waits for this.
+    const [isPlayerReady, setIsPlayerReady] = useState<boolean>(false)
     const [selectedCaption, setSelectedCaption] = useState<Caption | null>(null)
     const [isNoVideoError,setIsNoVideoError]=useState<boolean>(false)
     const learningSessionRef = useRef<LearningSession | null>(null)
@@ -387,10 +390,12 @@ sentenceApi.get(videoId).then(response => {
                         <button
                             type="button"
                             onClick={() => setMode("shadowing")}
-                            className={`rounded-md px-3 py-1.5 transition-colors ${
+                            disabled={!isPlayerReady}
+                            title={isPlayerReady ? undefined : "Loading video…"}
+                            className={`rounded-md px-3 py-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                                 mode === "shadowing"
                                     ? "bg-teal text-white"
-                                    : "text-white/50 hover:text-white"
+                                    : "text-white/50 hover:text-white disabled:hover:text-white/50"
                             }`}
                         >
                             Shadowing
@@ -402,7 +407,7 @@ sentenceApi.get(videoId).then(response => {
                             ref={videoPlayerRef}
                             videoId={videoMetaData!.youtube_video_id}
                             onTimeUpdate={(time)=> {setCurrentTime(time); lastKnownTimeRef.current = time; }}
-                            onReady={() => console.log("Player ready")}
+                            onReady={() => setIsPlayerReady(true)}
                             onPlayingChange={onPlayingChange}
                             onSeek={onSeek}
                             onEnded={onEnded}
