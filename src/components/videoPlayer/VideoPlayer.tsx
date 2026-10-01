@@ -41,6 +41,18 @@ function formatTime(seconds: number): string {
     return `${m}:${String(s % 60).padStart(2, "0")}`
 }
 
+// Turn off YouTube's own caption track so it doesn't compete with our CaptionBar.
+// `cc_load_policy: 0` only stops *forcing* captions — they still show if the viewer's
+// YouTube account or the uploader enabled them. `unloadModule` is undocumented but
+// long-standing; guarded so a future API change can't break playback.
+// (Subtitles burned into the video image can't be removed this way.)
+function hideYouTubeCaptions(player: { unloadModule?: (name: string) => void } | null | undefined) {
+    try {
+        player?.unloadModule?.("captions")
+        player?.unloadModule?.("cc")   // older player builds
+    } catch { /* noop */ }
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function VideoPlayer({
@@ -116,6 +128,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
             },
             events: {
                 onReady: (e: any) => {
+                    hideYouTubeCaptions(e.target)
                     setIsReady(true)
                     setDuration(e.target.getDuration())
                     setVolume(e.target.getVolume())
@@ -123,6 +136,8 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
                 },
                 onStateChange: (e: any) => {
                     const playing = e.data === 1
+                    // YouTube can reload the captions module when playback starts.
+                    if (playing) hideYouTubeCaptions(e.target)
                     setIsPlaying(playing)
                     onPlayingChange?.(playing)
                     if (playing) startTracking()
