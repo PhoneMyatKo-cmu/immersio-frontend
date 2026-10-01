@@ -10,7 +10,7 @@ import CaptionBar from "../components/videoPlayer/CaptionBar"
 import LookupPanel, { type LookupResult } from "../components/videoPlayer/LookUpPanel"
 import ShadowingFeedbackPanel, { type ShadowingFeedback } from "../components/videoPlayer/PronuciationFeedbackPanel"
 import ShadowingControls from "../components/videoPlayer/ShadowingControls"
-import ShadowingRecorder from "../components/videoPlayer/ShadowingRecorder"
+import ShadowingRecorder, { type RecorderState } from "../components/videoPlayer/ShadowingRecorder"
 import VideoPlayer, { type VideoPlayerHandle } from "../components/videoPlayer/VideoPlayer"
 import { useMediaQuery } from "../hooks/useMediaQuery"
 
@@ -79,6 +79,9 @@ function VideoPlaybackPage() {
     // YouTube player methods don't exist until onReady — switching to Shadowing before
     // then seeks a not-ready player and crashes the page, so the tab waits for this.
     const [isPlayerReady, setIsPlayerReady] = useState<boolean>(false)
+    // Karaoke fill on the shadowing sentence while recording
+    const [recordingPhase, setRecordingPhase] = useState<RecorderState>("idle")
+    const [voicedMs, setVoicedMs] = useState(0)
     const [selectedCaption, setSelectedCaption] = useState<Caption | null>(null)
     const [isNoVideoError,setIsNoVideoError]=useState<boolean>(false)
     const learningSessionRef = useRef<LearningSession | null>(null)
@@ -429,6 +432,9 @@ sentenceApi.get(videoId).then(response => {
                             playbackSpeed={playbackSpeed}
                             onPlaybackSpeedChange={handlePlaybackSpeedChange}
                             isScoring={feedbackLoading}
+                            recordingPhase={recordingPhase}
+                            voicedMs={voicedMs}
+                            wordResults={(feedbackResult as ShadowingFeedback | null)?.caption_error ?? null}
                         />
 <div className="mt-3 flex justify-center">
             <ShadowingRecorder
@@ -446,13 +452,18 @@ sentenceApi.get(videoId).then(response => {
                     const res = await shadowingApi.sendAudioForScore(form)   // your endpoint
                     return res.data
                 }}  
+                onPhaseChange={setRecordingPhase}
+                onVoiceActivity={setVoicedMs}
                 onScoringStart={() => {
-                    setIsFeedbackOpen(true)      // opens the panel / bottom sheet
+                    // Mobile: the sheet would cover the sentence box, so it opens only
+                    // after the learner has seen their wrong words light up there.
+                    if (!isMobile) setIsFeedbackOpen(true)
                     setFeedbackLoading(true)
                 }}
                 onScoringComplete={(result) => {
                     setFeedbackResult(result)
                     setFeedbackLoading(false)
+                    if (isMobile) setTimeout(() => setIsFeedbackOpen(true), 1400)
                 }}
                 onError={(e) => {
                     setFeedbackLoading(false)

@@ -1,7 +1,9 @@
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react"
+import { useMemo } from "react"
 import { getCaptionText } from "../../utils/captions"
 import type { Caption } from "./CaptionBar"
 import type { ShadowingSentence } from "../../types/shadowing"
+import type { RecorderState } from "./ShadowingRecorder"
 
 interface ShadowingControlsProps {
     currentSentence: Caption | ShadowingSentence | null
@@ -15,6 +17,39 @@ interface ShadowingControlsProps {
     onPlaybackSpeedChange: (speed: number) => void
     /** True while the latest take is being scored — makes the sentence glow. */
     isScoring?: boolean
+    /** Recorder phase — drives the karaoke fill while recording. */
+    recordingPhase?: RecorderState
+    /** Milliseconds of detected speech in the current take. */
+    voicedMs?: number
+    /** Word-level result of the last take ([surface, isCorrect]) — wrong words turn red. */
+    wordResults?: [string, boolean][] | null
+}
+
+// Learners' voiced time is shorter than the native sentence window (which includes
+// pauses between phrases), so the fill completes at ~80% of it, scaled by practice speed.
+const VOICED_SHARE = 0.8
+
+/** For each character: the order of the wrong word it belongs to, or null if fine. */
+function wrongCharOrder(chars: string[], words: [string, boolean][]): (number | null)[] {
+    const order: (number | null)[] = new Array(chars.length).fill(null)
+    let cursor = 0
+    let wrongCount = 0
+    for (const [surface, isCorrect] of words) {
+        const target = Array.from(surface)
+        if (!target.length) continue
+        // Find this word at or after the cursor (punctuation in the text is skipped over).
+        let at = -1
+        for (let k = cursor; k + target.length <= chars.length; k++) {
+            if (target.every((ch, t) => chars[k + t] === ch)) { at = k; break }
+        }
+        if (at === -1) continue
+        if (!isCorrect) {
+            for (let t = 0; t < target.length; t++) order[at + t] = wrongCount
+            wrongCount++
+        }
+        cursor = at + target.length
+    }
+    return order
 }
 
 function getSentenceText(sentence: Caption | ShadowingSentence | null): string {
@@ -71,8 +106,30 @@ export default function ShadowingControls({
     playbackSpeed,
     onPlaybackSpeedChange,
     isScoring = false,
+    recordingPhase = "idle",
+    voicedMs = 0,
+    wordResults = null,
 }: ShadowingControlsProps) {
     const hasSentence = Boolean(currentSentence)
+
+    const text = getSentenceText(currentSentence)
+    const chars = useMemo(() => Array.from(text), [text])
+
+    // Karaoke fill: advances only while the learner is audibly speaking.
+    const isKaraoke = recordingPhase === "checking" || recordingPhase === "recording"
+    const windowMs = currentSentence ? (currentSentence.end_time - currentSentence.start_time) * 1000 : 0
+    const expectedVoicedMs = Math.max(600, (windowMs * VOICED_SHARE) / (playbackSpeed || 1))
+    const filled = isKaraoke
+        ? Math.min(chars.length, Math.floor((voicedMs / expectedVoicedMs) * chars.length))
+        : chars.length
+
+    // Red words only once the new score is in (not during a fresh take / while scoring).
+    const showResults = recordingPhase === "done" && Boolean(wordResults?.length)
+    const wrongOrder = useMemo(
+        () => (showResults && wordResults ? wrongCharOrder(chars, wordResults) : null),
+        [showResults, wordResults, chars],
+    )
+    const useCharSpans = isKaraoke || Boolean(wrongOrder)
 
     return (
         <div className="border-t border-white/5 bg-darkgrey px-4 py-4 text-white">
@@ -90,7 +147,46 @@ export default function ShadowingControls({
                         ? "border-teal-500/40 bg-white/4 shadow-[0_0_24px_-8px_rgba(20,184,166,0.6)]"
                         : "border-white/8 bg-white/4"
                 }`}>
-                    {getSentenceText(currentSentence) || "Waiting for the current sentence..."}
+                    {!text ? (
+                        "Waiting for the current sentence..."
+                    ) : !useCharSpans ? (
+                        text
+                    ) : (
+                        <>
+                            <span className="sr-only">{text}</span>
+                            <span aria-hidden="true">
+                                {chars.map((ch, i) => {
+                                    const wrong = wrongOrder?.[i]
+                                    if (wrong != null) {
+                                        return (
+                                            <span
+                                                key={i}
+                                                className="inline-block text-red-400 underline decoration-red-400/60 decoration-2 underline-offset-4 transition-colors duration-200 motion-safe:animate-shake-x"
+                                                style={{ animationDelay: `${wrong * 90}ms` }}
+                                            >
+                                                {ch}
+                                            </span>
+                                        )
+                                    }
+                                    const lit = i < filled
+                                    return (
+                                        <span
+                                            key={i}
+                                            className={`transition-colors duration-150 ${
+                                                isKaraoke
+                                                    ? lit
+                                                        ? `text-teal-100 ${i === filled - 1 ? "drop-shadow-[0_0_6px_rgba(94,234,212,0.8)]" : ""}`
+                                                        : "text-teal-500/25"
+                                                    : ""
+                                            }`}
+                                        >
+                                            {ch}
+                                        </span>
+                                    )
+                                })}
+                            </span>
+                        </>
+                    )}
                     {/* While scoring: a light sweep across the sentence being analysed */}
                     {isScoring && (
                         <span

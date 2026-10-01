@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useScoringMessage } from "../../hooks/useScoringMessage"
 import ScoringWave from "./ScoringWave"
 
-type RecorderState =
+export type RecorderState =
     | "idle"
     | "requesting"
     | "checking"
@@ -49,6 +49,13 @@ export interface ShadowingRecorderProps {
     noiseThresholdDb?: number
     /** Length of the pre-record ambient sample, in ms. Default 600. */
     noiseSampleMs?: number
+    /** Fired whenever the recorder moves between idle / recording / processing / done / … */
+    onPhaseChange?: (phase: RecorderState) => void
+    /**
+     * Fired (~12fps, only while the learner is audibly speaking) with the total
+     * milliseconds of voice detected in the current take — drives the karaoke fill.
+     */
+    onVoiceActivity?: (voicedMs: number) => void
 }
 
 const NUM_BARS = 9
@@ -58,6 +65,9 @@ const VOICE_BINS = 48
 // Low frequencies in the centre, fanning out — reads as a symmetric waveform.
 const BAR_ORDER = [8, 6, 4, 2, 0, 1, 3, 5, 7]
 const METER_THROTTLE_MS = 80
+// Average meter level (0–1) above which a tick counts as "speaking".
+// Mic/room dependent — tune against real recordings if the fill feels too eager or lazy.
+const VOICE_THRESHOLD = 0.1
 
 export default function ShadowingRecorder({
     captionKey,
@@ -70,6 +80,8 @@ export default function ShadowingRecorder({
     noiseCheck = true,
     noiseThresholdDb = -30,
     noiseSampleMs = 600,
+    onPhaseChange,
+    onVoiceActivity,
 }: ShadowingRecorderProps) {
     const [state, setState] = useState<RecorderState>("idle")
     const [elapsedMs, setElapsedMs] = useState(0)
@@ -91,6 +103,17 @@ export default function ShadowingRecorder({
     const recordedUrlRef = useRef<string | null>(null)
     const noiseDbRef = useRef<number | null>(null)
     const playbackAudioRef = useRef<HTMLAudioElement | null>(null)
+
+    // Latest callbacks, readable from the long-lived meter loop without re-creating it.
+    const onPhaseChangeRef = useRef(onPhaseChange)
+    const onVoiceActivityRef = useRef(onVoiceActivity)
+    useEffect(() => {
+        onPhaseChangeRef.current = onPhaseChange
+        onVoiceActivityRef.current = onVoiceActivity
+    })
+    useEffect(() => {
+        onPhaseChangeRef.current?.(state)
+    }, [state])
 
     // ── teardown helpers ──────────────────────────────────────────────────────
 
@@ -201,6 +224,8 @@ export default function ShadowingRecorder({
         const data = new Uint8Array(analyser.frequencyBinCount)
         const band = Math.max(1, Math.floor(Math.min(VOICE_BINS, data.length) / NUM_BARS))
         let lastUpdate = 0
+        let voicedMs = 0
+        onVoiceActivityRef.current?.(0)
 
         const tick = (now: number) => {
             if (now - lastUpdate >= METER_THROTTLE_MS) {
@@ -212,6 +237,13 @@ export default function ShadowingRecorder({
                     bands.push(Math.min(1, sum / band / 180))
                 }
                 setLevels(BAR_ORDER.map((b) => bands[b]))
+                // Accumulate only time spent actually speaking, so the karaoke fill
+                // pauses when the learner pauses.
+                const volume = bands.reduce((a, b) => a + b, 0) / bands.length
+                if (lastUpdate && volume > VOICE_THRESHOLD) {
+                    voicedMs += now - lastUpdate
+                    onVoiceActivityRef.current?.(voicedMs)
+                }
                 lastUpdate = now
             }
             rafRef.current = requestAnimationFrame(tick)

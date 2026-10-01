@@ -17,6 +17,16 @@
   --animate-reveal: fade-up 0.45s cubic-bezier(0.2, 0.7, 0.3, 1) both;
   --animate-scoring-complete: scoring-complete 0.35s ease-out forwards;
   --animate-draw-line: draw-line 1.1s cubic-bezier(0.4, 0, 0.2, 1) both;
+  /* Shadowing sentence: wrong words nudge side to side when the score lands */
+  --animate-shake-x: shake-x 0.45s ease-in-out both;
+
+  @keyframes shake-x {
+    0%, 100% { transform: none; }
+    20% { transform: translateX(-2px); }
+    40% { transform: translateX(2px); }
+    60% { transform: translateX(-1.5px); }
+    80% { transform: translateX(1px); }
+  }
 
   @keyframes scoring-complete {
     from { width: 82%; }
